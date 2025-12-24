@@ -1,4 +1,4 @@
-package com.notes.presentation.theme
+package com.notes.design_system.theme
 
 import androidx.compose.material3.Typography
 

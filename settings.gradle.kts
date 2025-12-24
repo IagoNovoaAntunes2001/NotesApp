@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Notes"
 include(":app")
- 
+include(":home")
+include(":design-system")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

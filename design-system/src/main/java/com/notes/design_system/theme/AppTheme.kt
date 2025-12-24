@@ -1,4 +1,4 @@
-package com.notes.presentation.theme
+package com.notes.design_system.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
@@ -17,7 +17,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-internal fun AppTheme(
+fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {

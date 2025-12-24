@@ -7,13 +7,11 @@ object NavRoutes {
 
     object Screens {
         const val SPLASH = "splash"
-        const val HOME = "home?${Args.MSG}={${Args.MSG}}"
+        const val HOME = "home"
     }
 
-    fun home(msg: String) = "home?${Args.MSG}=$msg"
-
     object DeepLinks {
-        const val SPLASH = "myapp://notes/splash"
-        const val HOME = "myapp://notes/home?${Args.MSG}={${Args.MSG}}"
+        const val SPLASH = "notes://splash"
+        const val HOME = "notes://home"
     }
 }

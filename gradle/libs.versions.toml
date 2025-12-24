@@ -39,6 +39,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 
