@@ -42,8 +42,6 @@ android {
 }
 
 dependencies {
-    implementation(projects.home)
-    implementation(projects.designSystem)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -62,6 +60,10 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
+
+    // Feature modules
+    implementation(projects.home)
+    implementation(projects.designSystem)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

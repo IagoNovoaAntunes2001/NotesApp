@@ -1,20 +1,19 @@
 package com.notes.presentation
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.navigation.compose.rememberNavController
+import androidx.appcompat.app.AppCompatActivity
 import com.notes.design_system.theme.AppTheme
-import com.notes.presentation.navigation.AppNavHost
+import com.notes.presentation.navigation.NavigationGraph
 
-internal class MainActivity: ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
             AppTheme {
-                AppNavHost(navController = rememberNavController())
+                NavigationGraph()
             }
         }
     }
