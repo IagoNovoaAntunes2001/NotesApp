@@ -63,6 +63,12 @@ dependencies {
 
     // Feature modules
     implementation(projects.home)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Design System
     implementation(projects.designSystem)
 
     // Retrofit

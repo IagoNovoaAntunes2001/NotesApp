@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home_screen_title">Notes</string>
+    <string name="add_topic_fab_description">Add topic</string>
+    <string name="delete_topic_description">Delete topic</string>
+    <string name="add_topic_dialog_title">New topic</string>
+    <string name="add_topic_title_label">Title</string>
+    <string name="add_topic_description_label">Description</string>
+    <string name="add_topic_confirm">Add</string>
+    <string name="add_topic_cancel">Cancel</string>
 </resources>

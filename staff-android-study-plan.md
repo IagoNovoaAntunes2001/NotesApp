@@ -3,44 +3,6 @@
 ## 🗓️ Duração: 12 meses | Seg a Sex | 1h por dia
 ## 📊 Distribuição: 70% Android + IA | 20% KMP | 10% React/Web
 
----
-
-# 🏗️ Projeto Sample: StaffNotes
-
-> App de notas que evolui ao longo do ano. Simples o suficiente para não gastar tempo com regras de negócio, complexo o suficiente para aplicar TODOS os conceitos.
-
-## Estrutura Final (vai crescendo ao longo do ano):
-
-```
-📁 staff-notes/
-├── app/
-├── core/
-│   ├── core-model/
-│   ├── core-data/
-│   ├── core-database/
-│   ├── core-network/
-│   ├── core-ui/
-│   └── core-common/
-├── feature/
-│   ├── feature-notes-list/
-│   ├── feature-note-detail/
-│   ├── feature-search/
-│   └── feature-ai/
-├── shared/ (KMP — Q3)
-├── react-web/ (React — Q3)
-├── build-logic/
-├── gradle/libs.versions.toml
-└── LEARNING_LOG.md
-```
-
-## Método Diário:
-
-| Fase | Tempo | O que fazer |
-|------|-------|-------------|
-| 📖 Teoria | 20min | Ler doc/artigo/livro indicado |
-| 💻 Prática | 30min | Codar no StaffNotes |
-| ✍️ Reflexão | 10min | Escrever no LEARNING_LOG.md |
-
 ## Progresso Geral:
 
 - [ ] Q1 — Fundações (Meses 1-3)
@@ -87,33 +49,32 @@
     - UseCase = 1 responsabilidade, operator fun invoke()
     - Não criar UseCase se ele só repassa pro Repository
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Guide to app architecture — Data Layer"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Guide to app architecture — Data Layer"
     - Link: https://developer.android.com/topic/architecture/data-layer
     - Foco: Repository pattern, DataSource, Single Source of Truth
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie módulo :core:database
     - Configure Room: NoteEntity, NoteDao, AppDatabase
     - Crie NoteLocalDataSource (wrapper do DAO)
     - Implemente NoteRepositoryImpl no :core:data
     - Conecte tudo: UI → ViewModel → UseCase → Repository → Room
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Data Layer = Repository + DataSources
     - Repository decide de ONDE vêm os dados
     - Single Source of Truth = Room (DB é a verdade)
-    - Flow\<List\<Note\>\> = reatividade automática
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "State holders and UI State"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "State holders and UI State"
     - Link: https://developer.android.com/topic/architecture/ui-layer/stateholders
     - Foco: UDF (Unidirectional Data Flow), state hoisting
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Refatore NoteListViewModel para UDF:
       - sealed interface NoteListEvent { AddNote, DeleteNote, Search }
       - fun onEvent(event: NoteListEvent)
     - Crie NoteListScreen em Compose coletando state
     - Teste: adicionar nota e ver na lista
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - UDF: Events sobem (UI → VM), State desce (VM → UI)
     - ViewModel é o "processador" de eventos
     - UI NUNCA muda estado diretamente
