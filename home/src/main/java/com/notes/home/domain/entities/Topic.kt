@@ -1,4 +1,4 @@
-package com.notes.home.presentation.model
+package com.notes.home.domain.entities
 
 data class Topic(
     val id: Int,

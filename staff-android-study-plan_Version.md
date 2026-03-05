@@ -72,17 +72,17 @@
     - ViewModel expõe StateFlow, UI coleta com collectAsState
     - UI State deve ser imutável (data class)
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Guide to app architecture — Domain Layer"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Guide to app architecture — Domain Layer"
     - Link: https://developer.android.com/topic/architecture/domain-layer
     - Foco: UseCases, quando usar, quando NÃO usar
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie módulo :core:model
     - Crie `data class Note(id, title, content, createdAt, updatedAt)`
     - Crie módulo :core:data com `interface NoteRepository`
     - Crie `GetNotesUseCase` no feature module
     - Conecte: ViewModel → UseCase → Repository (fake por enquanto)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Domain Layer é opcional — só usar quando tem lógica combinada
     - UseCase = 1 responsabilidade, operator fun invoke()
     - Não criar UseCase se ele só repassa pro Repository

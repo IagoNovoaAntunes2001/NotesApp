@@ -65,6 +65,10 @@ dependencies {
     implementation(projects.home)
     implementation(projects.designSystem)
 
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.gson)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
