@@ -19,6 +19,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -32,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.notes.design_system.theme.Spacing
 import com.notes.home.R
 import com.notes.home.presentation.components.TopicCard
@@ -41,13 +43,32 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navController: NavController,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
-        viewModel.loadTopics()
+        viewModel.processIntent(HomeIntent.LoadTopics)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.sideEffect.collect { effect ->
+            when (effect) {
+                is HomeSideEffect.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                is HomeSideEffect.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = effect.errorMessage,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+        }
     }
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -60,6 +81,9 @@ fun HomeScreen(
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_topic_fab_description))
             }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { innerPadding ->
         when {
@@ -92,7 +116,7 @@ fun HomeScreen(
                         TopicCard(
                             title = topic.title,
                             description = topic.description,
-                            onDelete = { viewModel.onEvent(HomeEvent.DeleteTopic(topic)) }
+                            onDelete = { viewModel.processIntent(HomeIntent.DeleteTopic(topic)) }
                         )
                     }
                 }
@@ -104,7 +128,7 @@ fun HomeScreen(
         AddTopicDialog(
             onDismiss = { showAddDialog = false },
             onConfirm = { title, description ->
-                viewModel.onEvent(HomeEvent.AddTopic(title, description))
+                viewModel.processIntent(HomeIntent.AddTopic(title, description))
                 showAddDialog = false
             }
         )

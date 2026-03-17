@@ -79,61 +79,61 @@
     - ViewModel é o "processador" de eventos
     - UI NUNCA muda estado diretamente
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações + Leia "Architecture recommendations"
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações + Leia "Architecture recommendations"
     - Link: https://developer.android.com/topic/architecture/recommendations
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Revise código da semana, limpe e organize
     - Rode o app: lista de notas funcionando com Room
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Projeto criado com 3 camadas (UI, Domain, Data)
     - ✅ Room como source of truth
     - ✅ UDF implementado
 
-- [ ] ✅ **Semana 1 concluída**
+- [X] ✅ **Semana 1 concluída**
 
 ---
 
 ### Semana 2: MVI na Prática
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "MVI Architecture" — Hannes Dorfmann
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "MVI Architecture" — Hannes Dorfmann
     - Link: https://hannesdorfmann.com/android/model-view-intent/
     - Foco: Intent (evento), Model (estado), como difere de MVVM
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie sealed interfaces robustas:
       - `NoteListIntent { LoadNotes, SearchNotes(query), DeleteNote(id) }`
       - `NoteListState(notes, isLoading, error, searchQuery)`
     - Implemente processamento de Intents no ViewModel
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - MVI = MVVM com eventos tipados (sealed class)
     - Intent → Reducer → novo State (puro)
     - Side effects tratados separadamente
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Side Effects in Jetpack Compose"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Side Effects in Jetpack Compose"
     - Link: https://developer.android.com/develop/ui/compose/side-effects
     - Foco: LaunchedEffect, SideEffect, rememberCoroutineScope
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie sealed interface de Side Effects:
       - `NoteListSideEffect { NavigateToDetail(id), ShowSnackbar(msg) }`
     - Use Channel\<SideEffect\> no ViewModel
     - Colete com LaunchedEffect na UI
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Side effects = coisas que acontecem UMA vez
     - Channel garante: emitiu → consumiu → acabou
     - NÃO colocar side effects no State
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "ViewModel Overview"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "ViewModel Overview"
     - Link: https://developer.android.com/topic/libraries/architecture/viewmodel
     - Foco: lifecycle, SavedStateHandle
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione SavedStateHandle ao ViewModel
     - Salve searchQuery (sobrevive process death)
     - Teste: busque → rotacione → query mantida?
     - Teste: force process death → query mantida?
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - SavedStateHandle sobrevive process death
     - StateFlow NÃO sobrevive
     - Dados do usuário → SavedStateHandle
