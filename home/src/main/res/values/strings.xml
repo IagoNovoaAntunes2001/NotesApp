@@ -8,4 +8,11 @@
     <string name="add_topic_description_label">Description</string>
     <string name="add_topic_confirm">Add</string>
     <string name="add_topic_cancel">Cancel</string>
+    <string name="topic_added_success">Tópico adicionado com sucesso!</string>
+    <string name="topic_deleted_success">Tópico removido!</string>
+    <string name="error_add_topic">Erro ao adicionar tópico</string>
+    <string name="error_delete_topic">Erro ao remover tópico</string>
+    <string name="detail_screen_title">Topic Detail</string>
+    <string name="detail_back_description">Go back</string>
+    <string name="detail_topic_not_found">Topic not found</string>
 </resources>

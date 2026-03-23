@@ -138,30 +138,30 @@
     - StateFlow NÃO sobrevive
     - Dados do usuário → SavedStateHandle
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia Orbit MVI ou Circuit (escolha um):
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia Orbit MVI ou Circuit (escolha um):
     - Orbit: https://github.com/orbit-mvi/orbit-mvi
     - Circuit (Slack): https://slackhq.github.io/circuit/
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Experimente a lib escolhida
     - Compare: código com lib vs sem lib
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Minha decisão: [manual vs lib] porque [motivo]
     - Trade-off: dependência vs produtividade
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Managing State with Compose"
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Managing State with Compose"
     - Link: https://developer.android.com/develop/ui/compose/state
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Refatore NoteListScreen: state hoisting completo
     - Crie Previews com fake state
     - Crie NoteDetailScreen com mesmo padrão MVI
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ MVI com Intent, State, SideEffect
     - ✅ SavedStateHandle para process death
     - ✅ 2 telas com MVI: List + Detail
 
-- [ ] ✅ **Semana 2 concluída**
+- [X] ✅ **Semana 2 concluída**
 
 ---
 

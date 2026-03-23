@@ -13,6 +13,9 @@ class TopicRepositoryImpl(
     override suspend fun getTopics(): List<Topic> =
         topicDao.getAll().map { it.toDomain() }
 
+    override suspend fun getTopicById(id: Int): Topic? =
+        topicDao.getById(id)?.toDomain()
+
     override suspend fun insertTopic(topic: Topic) =
         topicDao.insert(topic.toEntity())
 

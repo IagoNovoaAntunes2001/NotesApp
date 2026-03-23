@@ -43,6 +43,7 @@ import org.koin.androidx.compose.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigateToDetail: (topicId: Int) -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,6 +67,9 @@ fun HomeScreen(
                         message = effect.errorMessage,
                         duration = SnackbarDuration.Long
                     )
+                }
+                is HomeSideEffect.NavigateToDetail -> {
+                    onNavigateToDetail(effect.topicId)
                 }
             }
         }
@@ -116,6 +120,7 @@ fun HomeScreen(
                         TopicCard(
                             title = topic.title,
                             description = topic.description,
+                            onClick = { viewModel.processIntent(HomeIntent.NavigateToDetail(topic)) },
                             onDelete = { viewModel.processIntent(HomeIntent.DeleteTopic(topic)) }
                         )
                     }

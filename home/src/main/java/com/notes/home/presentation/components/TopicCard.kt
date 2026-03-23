@@ -24,9 +24,13 @@ fun TopicCard(
     title: String,
     description: String,
     onDelete: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth()
+    ) {
         Row(
             modifier = Modifier
                 .padding(Spacing.medium)

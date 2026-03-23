@@ -7,6 +7,7 @@ import com.notes.home.domain.entities.Topic
 import com.notes.home.domain.usecases.AddTopicUseCase
 import com.notes.home.domain.usecases.DeleteTopicUseCase
 import com.notes.home.domain.usecases.GetTopicsUseCase
+import com.notes.home.presentation.resources.HomeResources
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +20,8 @@ class HomeViewModel(
     private val getTopicsUseCase: GetTopicsUseCase,
     private val addTopicUseCase: AddTopicUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val resources: HomeResources
 ) : ViewModel() {
 
     companion object {
@@ -48,6 +50,9 @@ class HomeViewModel(
             is HomeIntent.Search -> {
                 searchQuery = intent.query
             }
+            is HomeIntent.NavigateToDetail -> {
+                emitSideEffect(HomeSideEffect.NavigateToDetail(intent.topic.id))
+            }
         }
     }
 
@@ -67,10 +72,10 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 addTopicUseCase(title, description)
-                emitSideEffect(HomeSideEffect.ShowSnackbar("Tópico adicionado com sucesso!"))
+                emitSideEffect(HomeSideEffect.ShowSnackbar(resources.topicAddedSuccess))
                 processIntent(HomeIntent.LoadTopics)
             } catch (e: Exception) {
-                emitSideEffect(HomeSideEffect.ShowError(e.message ?: "Erro ao adicionar tópico"))
+                emitSideEffect(HomeSideEffect.ShowError(e.message ?: resources.errorAddTopic))
                 reduce { copy(errorMessage = e.message) }
             }
         }
@@ -80,10 +85,10 @@ class HomeViewModel(
         viewModelScope.launch {
             try {
                 deleteTopicUseCase(topic)
-                emitSideEffect(HomeSideEffect.ShowSnackbar("Tópico removido!"))
+                emitSideEffect(HomeSideEffect.ShowSnackbar(resources.topicDeletedSuccess))
                 processIntent(HomeIntent.LoadTopics)
             } catch (e: Exception) {
-                emitSideEffect(HomeSideEffect.ShowError(e.message ?: "Erro ao remover tópico"))
+                emitSideEffect(HomeSideEffect.ShowError(e.message ?: resources.errorDeleteTopic))
                 reduce { copy(errorMessage = e.message) }
             }
         }

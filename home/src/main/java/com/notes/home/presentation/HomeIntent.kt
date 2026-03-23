@@ -7,5 +7,6 @@ sealed interface HomeIntent {
     data class AddTopic(val title: String, val description: String) : HomeIntent
     data class DeleteTopic(val topic: Topic) : HomeIntent
     data class Search(val query: String) : HomeIntent
+    data class NavigateToDetail(val topic: Topic) : HomeIntent
 }
 

@@ -73,12 +73,22 @@
 
 ## Mês 1 | Semana 2 | Quarta-feira
 
-- A viewModel sobrevive as mudanças de configurações por ser salva no viewModelStore, no entanto
-- não sobrevive ao processo de morte do aplicativo, ou seja, quando o sistema mata o processo para liberar recursos, a viewModel é destruída e perde seu estado
-- Para salvar o estado da viewModel, podemos usar o SavedStateHandle, que é um objeto que permite salvar e restaurar o estado da viewModel em caso de morte do processo
-- O SavedStateHandle é um mapa de chave-valor que pode ser usado para salvar dados simples, como strings, números, etc, e também pode ser usado para salvar objetos complexos, desde que sejam serializáveis
-- Para usar o SavedStateHandle, basta injetá-lo na viewModel e usar os métodos set e get para salvar e recuperar os dados, respectivamente
-- O ciclo de vida do SavedStateHandle é o mesmo da viewModel, ou seja, ele é criado quando a viewModel é criada e destruído quando a viewModel é destruída, garantindo que os dados sejam salvos e restaurados corretamente em caso de morte do processo
-- O ciclo de vida da viewModel é o seguinte:
-  - onCleared() é chamado quando a viewModel é destruíd apenas na morte do processo, ou seja, quando o sistema mata o processo para liberar recursos
-  - onCleared() é o momento ideal para limpar recursos, cancelar coroutines, etc, para evitar vazamentos de memória e garantir que a viewModel seja destruída corretamente
+- A viewModel vive no ViewModelStore, que é retido pelo sistema durante config changes (rotação, mudança de tema, etc)
+  - ela **não morre com a Activity** em config changes — é exatamente para isso que ela existe
+  - ela morre quando a Activity **realmente termina** (usuário pressiona back, `finish()` é chamado) ou com process death
+- Process death ocorre quando o sistema mata o processo do app para liberar recursos (Low Memory Kill)
+  - nesse caso a viewModel é destruída e perde todo o seu estado em memória
+- Para sobreviver ao process death, usamos o SavedStateHandle
+  - ele é um mapa chave-valor que serializa os dados num **Bundle**
+  - esse Bundle é mantido pelo **processo do sistema** (ActivityManagerService) na RAM do sistema, **não em disco**
+  - por isso tem limitações: aceita apenas tipos primitivos, Strings e Parcelables, com limite de ~500KB
+  - quando o usuário retorna ao app após um process death, o sistema restaura o Bundle e o SavedStateHandle é recriado com os dados anteriores
+  - diferença importante: SavedStateHandle ≠ persistência em disco (Room, DataStore) — se o dispositivo reiniciar sem o app ter sido backgrounded antes, os dados são perdidos
+
+## Mês 1 | Semana 2 | Quarta-feira/Sexta-feira
+
+- Usamos o MVI com StateFlow para o estado da UI e Channel para os side-effects, garantindo um fluxo unidirecional de dados e uma UI reativa
+- A viewModel é responsável por gerenciar o estado da UI e os side-effects, garantindo que a UI seja desacoplada da lógica de negócios e responda às mudanças de estado de forma
+- Os side-effects são tratados de forma separada do estado da UI, garantindo que a UI seja reativa e responda às mudanças de estado, além de facilitar a manutenção e a testabilidade do código
+- O SavedStateHandle é usado para salvar o estado da viewModel em caso de morte do processo, garantindo que os dados sejam restaurados corretamente quando o aplicativo for reaberto
+- Os dados do savedStateHandle são restaurados automaticamente quando a viewModel é recriada após a morte do processo, garantindo que a UI seja restaurada ao estado anterior sem necessidade de lógica adicional para lidar com isso

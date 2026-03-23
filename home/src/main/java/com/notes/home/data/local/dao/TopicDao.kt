@@ -13,6 +13,9 @@ interface TopicDao {
     @Query("SELECT * FROM topics")
     suspend fun getAll(): List<TopicEntity>
 
+    @Query("SELECT * FROM topics WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Int): TopicEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(topic: TopicEntity)
 
