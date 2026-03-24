@@ -3,10 +3,10 @@ package com.notes.home.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.notes.home.domain.entities.Topic
-import com.notes.home.domain.usecases.AddTopicUseCase
-import com.notes.home.domain.usecases.DeleteTopicUseCase
-import com.notes.home.domain.usecases.GetTopicsUseCase
+import com.notes.core.data.usecase.AddTopicUseCase
+import com.notes.core.data.usecase.DeleteTopicUseCase
+import com.notes.core.data.usecase.GetTopicsUseCase
+import com.notes.core.model.Topic
 import com.notes.home.presentation.resources.HomeResources
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -21,6 +21,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "Notes"
 include(":app")
-include(":home")
 include(":design-system")
+include(":core:model")
+include(":core:data")
+include(":core:database")
+include(":home")
+include(":detail")
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

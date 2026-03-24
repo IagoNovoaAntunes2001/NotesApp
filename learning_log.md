@@ -92,3 +92,32 @@
 - Os side-effects são tratados de forma separada do estado da UI, garantindo que a UI seja reativa e responda às mudanças de estado, além de facilitar a manutenção e a testabilidade do código
 - O SavedStateHandle é usado para salvar o estado da viewModel em caso de morte do processo, garantindo que os dados sejam restaurados corretamente quando o aplicativo for reaberto
 - Os dados do savedStateHandle são restaurados automaticamente quando a viewModel é recriada após a morte do processo, garantindo que a UI seja restaurada ao estado anterior sem necessidade de lógica adicional para lidar com isso
+
+## Mês 1 | Semana 3 | Seg, Ter, Qua-feiras
+
+- A modularização é importante para a escalabilidade e manutenção do código, permitindo que diferentes partes do aplicativo sejam desenvolvidas e testadas de forma independente
+- A modularização pode ser feita por feature, camada ou responsabilidade, dependendo das necessidades do projeto
+- Estrutura adotada no projeto: by feature + by layer nos módulos core
+  - `:core:model` — entidade pura (Topic), zero dependências, puro Kotlin
+  - `:core:data` — contrato (TopicRepository interface) + UseCases — só conhece o modelo
+  - `:core:database` — implementação Room (Entity, DAO, Database, Mapper, RepositoryImpl) — conhece model + data
+  - `:home` — feature: lista de tópicos (MVI completo) — só conhece core:model + core:data
+  - `:detail` — feature: detalhe do tópico (MVI completo) — só conhece core:model + core:data
+  - `:app` — orquestrador: monta a navegação e inicializa o DI
+
+- Regra fundamental: **feature nunca depende de outra feature** — quem orquestra é o `:app`
+
+- Cada feature expõe um `navGraph` extension function para o `NavGraphBuilder`
+  - o `:app` monta o NavHost chamando os navGraphs de cada feature
+  - isso garante que cada feature seja completamente independente e não conheça as rotas das outras
+  - as rotas e constantes de argumentos ficam dentro do próprio módulo feature
+
+- O `:app` conhece `:core:database` para dar vida às instâncias no DI (Koin startKoin)
+  - `databaseModule` → instancia o Room e registra o `TopicRepositoryImpl` como `TopicRepository`
+  - `dataModule` → registra os UseCases que dependem do contrato `TopicRepository`
+  - as features nunca veem o Room — elas pedem `TopicRepository` ao Koin e o `:app` garante que a implementação está registrada
+  - isso é a inversão de dependência (SOLID — DIP) aplicada no Gradle
+
+- Diferença entre `implementation` e `api` no Gradle:
+  - `implementation` → dependência interna, não vaza para quem depende do módulo (padrão)
+  - `api` → dependência pública, quem depende do módulo também a recebe transitivamente

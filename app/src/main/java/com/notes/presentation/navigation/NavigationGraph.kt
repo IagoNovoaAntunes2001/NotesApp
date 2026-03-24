@@ -1,38 +1,28 @@
 package com.notes.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.notes.home.presentation.HomeScreen
-import com.notes.home.presentation.detail.DetailScreen
+import com.notes.detail.navigation.createDetailRoute
+import com.notes.detail.navigation.detailNavGraph
+import com.notes.home.navigation.HOME_ROUTE
+import com.notes.home.navigation.homeNavGraph
 
 @Composable
-internal fun NavigationGraph(startDestination: String = Screen.Home.route) {
+internal fun NavigationGraph() {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = HOME_ROUTE
     ) {
-        composable(route = Screen.Home.route) {
-            HomeScreen(
-                onNavigateToDetail = { topicId ->
-                    navController.navigate(Screen.Detail.createRoute(topicId))
-                }
-            )
-        }
-        composable(
-            route = Screen.Detail.route,
-            arguments = listOf(navArgument(Screen.Detail.ARG_TOPIC_ID) { type = NavType.IntType })
-        ) { backStackEntry ->
-            val topicId = backStackEntry.arguments?.getInt(Screen.Detail.ARG_TOPIC_ID) ?: return@composable
-            DetailScreen(
-                topicId = topicId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+        homeNavGraph(
+            onNavigateToDetail = { topicId ->
+                navController.navigate(createDetailRoute(topicId))
+            }
+        )
+        detailNavGraph(
+            onNavigateBack = { navController.popBackStack() }
+        )
     }
 }

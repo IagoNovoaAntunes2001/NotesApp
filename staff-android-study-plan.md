@@ -167,40 +167,40 @@
 
 ### Semana 3: Multi-Module Architecture
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Guide to Android app modularization"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Guide to Android app modularization"
     - Link: https://developer.android.com/topic/modularization
     - Foco: por que modularizar, tipos de módulos
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Clone Now in Android: `git clone https://github.com/android/nowinandroid.git`
     - Explore: :core:*, :feature:*, build-logic/
     - Abra build.gradle.kts de 3 módulos diferentes
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - :feature depende de :core, nunca de outro :feature
     - :core:model não depende de nada (puro)
     - Dependências apontam "para dentro"
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Modularization — Common patterns"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Modularization — Common patterns"
     - Link: https://developer.android.com/topic/modularization/patterns
     - Foco: by feature vs by layer, API modules
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie módulo :feature:notes-list (mova código da lista)
     - Configure build.gradle.kts com dependências corretas
     - Garanta que compila
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - :app agora só faz navigation + DI
     - :feature:notes-list compila independente
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Estude navegação no Now in Android:
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Estude navegação no Now in Android:
     - Link: https://github.com/android/nowinandroid/tree/main/app/src/main/kotlin/com/google/samples/apps/nowinandroid/navigation
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie :feature:note-detail (mova tela de detalhe)
     - Cada feature expõe `fun navGraph(NavGraphBuilder)`
     - :app monta NavHost chamando cada feature
     - Teste: lista → detalhe → voltar
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Cada feature expõe rota sem conhecer as outras
     - :app é o orquestrador de navegação
 

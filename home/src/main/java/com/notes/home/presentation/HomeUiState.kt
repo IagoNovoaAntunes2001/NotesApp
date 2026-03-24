@@ -1,6 +1,6 @@
 package com.notes.home.presentation
 
-import com.notes.home.domain.entities.Topic
+import com.notes.core.model.Topic
 
 data class HomeUiState(
     val isLoading: Boolean = false,

@@ -1,6 +1,6 @@
 package com.notes.home.presentation
 
-import com.notes.home.domain.entities.Topic
+import com.notes.core.model.Topic
 
 sealed interface HomeIntent {
     data object LoadTopics : HomeIntent

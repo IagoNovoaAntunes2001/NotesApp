@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.ksp)
 }
 
 android {
@@ -40,7 +39,12 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
+    // Core modules
+    implementation(projects.core.model)
+    implementation(projects.core.data)
+
+    // Design System
+    implementation(projects.designSystem)
 
     // Compose
     implementation(platform(libs.compose.bom))
@@ -53,22 +57,13 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Design System
-    implementation(projects.designSystem)
-
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.gson)
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // Room
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

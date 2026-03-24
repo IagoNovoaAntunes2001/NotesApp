@@ -42,11 +42,23 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
+    // Features — :app só importa os navGraphs, não conhece internals de cada feature
+    implementation(projects.home)
+    implementation(projects.detail)
 
-    // Compose BOM
+    // :core:data — necessário para carregar o dataModule (UseCases) no startKoin
+    // as features dependem dele também, mas :app precisa instanciá-lo no DI
+    implementation(projects.core.data)
+
+    // :core:database — necessário para carregar o databaseModule no startKoin
+    // é aqui que a implementação do TopicRepository ganha vida (Room + DAO)
+    // as features NUNCA dependem disto — elas só conhecem a interface em :core:data
+    implementation(projects.core.database)
+
+    // Design System
+    implementation(projects.designSystem)
+
+    // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling)
@@ -54,26 +66,16 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
 
-    // Lifecycle / ViewModel
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // Feature modules
-    implementation(projects.home)
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // Design System
-    implementation(projects.designSystem)
-
-    // Retrofit
-    implementation(libs.retrofit)
-    implementation(libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
