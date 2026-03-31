@@ -1,9 +1,5 @@
 package com.notes.detail.di
 
-import com.notes.detail.presentation.DetailViewModel
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.module
-
-val detailModule = module {
-    viewModel { DetailViewModel(getTopicByIdUseCase = get()) }
-}
+// Este arquivo não é mais necessário.
+// Com @HiltViewModel em DetailViewModel, o Hilt cria o ViewModel automaticamente
+// usando HiltViewModelFactory — não precisamos declarar nada aqui.

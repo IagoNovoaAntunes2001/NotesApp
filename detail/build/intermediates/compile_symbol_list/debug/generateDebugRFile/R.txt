@@ -1,0 +1,3 @@
+int string detail_back_description 0x0
+int string detail_screen_title 0x0
+int string detail_topic_not_found 0x0

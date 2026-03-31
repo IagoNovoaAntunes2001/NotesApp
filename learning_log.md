@@ -121,3 +121,12 @@
 - Diferença entre `implementation` e `api` no Gradle:
   - `implementation` → dependência interna, não vaza para quem depende do módulo (padrão)
   - `api` → dependência pública, quem depende do módulo também a recebe transitivamente
+
+## Mês 1 | Semana 3 | Quinta-feira
+
+- O hilt é um framework de injeção de dependências para Android que facilita a gestão de dependências e a construção de objetos complexos, promovendo a modularização e a testabilidade do código
+- Ele é baseado no Dagger, mas com uma configuração mais simples e integrada ao ciclo de vida do Android, permitindo a injeção automática de dependências em Activities, Fragments, ViewModels, etc
+- O hilt usa anotações para definir os componentes e as dependências, como `@HiltAndroidApp`, `@AndroidEntryPoint`, `@Inject`, `@Module`, `@Provides`, etc
+- Ele também suporta escopos para controlar o ciclo de vida das dependências, como `@Singleton`, `@ActivityScoped`, `@FragmentScoped`, etc
+- O hilt facilita a modularização do código, permitindo que as dependências sejam definidas em módulos separados e injetadas onde necessário, promovendo a separação de responsabilidades e a testabilidade do código
+- Em comparação ao Koin, o hilt é mais robusto e escalável para projetos maiores, mas tem uma curva de aprendizado mais acentuada devido à sua complexidade e ao uso de anotações, enquanto o Koin é mais simples e fácil de configurar, mas pode não ser tão eficiente em projetos grandes com muitas dependências.

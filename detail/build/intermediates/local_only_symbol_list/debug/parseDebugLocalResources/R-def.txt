@@ -1,0 +1,5 @@
+R_DEF: Internal format may change without notice
+local
+string detail_back_description
+string detail_screen_title
+string detail_topic_not_found

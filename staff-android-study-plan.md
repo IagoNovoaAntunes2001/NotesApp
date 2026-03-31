@@ -204,26 +204,26 @@
     - Cada feature expõe rota sem conhecer as outras
     - :app é o orquestrador de navegação
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Hilt in multi-module"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Hilt in multi-module"
     - Link: https://developer.android.com/training/dependency-injection/hilt-multi-module
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Configure Hilt nos módulos:
       - :core:data → @Module @Binds NoteRepository
       - :core:database → @Module @Provides AppDatabase
       - :feature:notes-list → @HiltViewModel
     - Rode: lista de notas via Room + Hilt DI
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Hilt multi-module: cada módulo declara @Module
     - :app instala tudo via @HiltAndroidApp
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia modules-graph-assert README
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Leia modules-graph-assert README
     - Link: https://github.com/jraska/modules-graph-assert
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione plugin, gere grafo de módulos
     - Configure regra: :feature não depende de :feature
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ App modularizado: :app, :core:*, :feature:*
     - ✅ Navegação multi-module
     - ✅ Hilt cross-module

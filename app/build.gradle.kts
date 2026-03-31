@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -46,12 +48,10 @@ dependencies {
     implementation(projects.home)
     implementation(projects.detail)
 
-    // :core:data — necessário para carregar o dataModule (UseCases) no startKoin
-    // as features dependem dele também, mas :app precisa instanciá-lo no DI
+    // :core:data — necessário para o Hilt enxergar o DataModule (UseCases)
     implementation(projects.core.data)
 
-    // :core:database — necessário para carregar o databaseModule no startKoin
-    // é aqui que a implementação do TopicRepository ganha vida (Room + DAO)
+    // :core:database — aqui o Hilt instancia Room + TopicRepositoryImpl
     // as features NUNCA dependem disto — elas só conhecem a interface em :core:data
     implementation(projects.core.database)
 
@@ -68,14 +68,14 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    // Koin
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

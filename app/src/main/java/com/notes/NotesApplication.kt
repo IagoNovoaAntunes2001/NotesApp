@@ -1,25 +1,11 @@
 package com.notes
 
 import android.app.Application
-import com.notes.core.data.di.dataModule
-import com.notes.core.database.di.databaseModule
-import com.notes.detail.di.detailModule
-import com.notes.home.di.homeModule
-import org.koin.android.ext.koin.androidContext
-import org.koin.core.context.startKoin
+import dagger.hilt.android.HiltAndroidApp
 
-class NotesApplication : Application() {
-
-    override fun onCreate() {
-        super.onCreate()
-        startKoin {
-            androidContext(this@NotesApplication)
-            modules(
-                databaseModule,
-                dataModule,
-                homeModule,
-                detailModule
-            )
-        }
-    }
-}
+// @HiltAndroidApp dispara a geração de código do Hilt e inicializa
+// o grafo de dependências global (SingletonComponent) automaticamente.
+// Não precisamos mais listar módulos manualmente — o Hilt os descobre
+// via @InstallIn em cada @Module espalhado pelos módulos do projeto.
+@HiltAndroidApp
+class NotesApplication : Application()

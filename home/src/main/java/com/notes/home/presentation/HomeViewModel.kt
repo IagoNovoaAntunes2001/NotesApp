@@ -8,6 +8,7 @@ import com.notes.core.data.usecase.DeleteTopicUseCase
 import com.notes.core.data.usecase.GetTopicsUseCase
 import com.notes.core.model.Topic
 import com.notes.home.presentation.resources.HomeResources
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,8 +16,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HomeViewModel(
+// @HiltViewModel diz ao Hilt que ele deve criar este ViewModel usando
+// o HiltViewModelFactory, permitindo injeção via @Inject constructor.
+@HiltViewModel
+class HomeViewModel @Inject constructor(
     private val getTopicsUseCase: GetTopicsUseCase,
     private val addTopicUseCase: AddTopicUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,

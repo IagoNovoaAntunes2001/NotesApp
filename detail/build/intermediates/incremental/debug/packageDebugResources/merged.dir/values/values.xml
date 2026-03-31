@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="detail_back_description">Go back</string>
+    <string name="detail_screen_title">Topic Detail</string>
+    <string name="detail_topic_not_found">Topic not found</string>
+</resources>
