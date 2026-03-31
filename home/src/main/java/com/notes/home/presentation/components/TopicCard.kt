@@ -20,7 +20,7 @@ import com.notes.design_system.theme.Spacing
 import com.notes.home.R
 
 @Composable
-fun TopicCard(
+internal fun TopicCard(
     title: String,
     description: String,
     onDelete: () -> Unit,

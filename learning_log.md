@@ -130,3 +130,23 @@
 - Ele também suporta escopos para controlar o ciclo de vida das dependências, como `@Singleton`, `@ActivityScoped`, `@FragmentScoped`, etc
 - O hilt facilita a modularização do código, permitindo que as dependências sejam definidas em módulos separados e injetadas onde necessário, promovendo a separação de responsabilidades e a testabilidade do código
 - Em comparação ao Koin, o hilt é mais robusto e escalável para projetos maiores, mas tem uma curva de aprendizado mais acentuada devido à sua complexidade e ao uso de anotações, enquanto o Koin é mais simples e fácil de configurar, mas pode não ser tão eficiente em projetos grandes com muitas dependências.
+
+## Mês 1 | Semana 3 | Sexta-feira
+
+### modules-graph-assert
+
+- Plugin Gradle que valida regras arquiteturais do grafo de módulos em tempo de build
+- Permite definir regras como "o módulo X não pode depender do módulo Y" ou "o módulo Z só pode ser dependido por módulos A e B"
+- Ajuda a manter a modularização e a independência entre os módulos, evitando acoplamento indesejado e garantindo que as dependências sejam controladas e explícitas
+- Pode ser configurado para falhar o build se as regras forem violadas, garantindo que a arquitetura seja mantida ao longo do desenvolvimento e evitando que dependências indesejadas sejam introduzidas acidental
+- Exemplo de configuração:
+  ```
+  moduleGraphAssert {
+    // restricted: pares de módulos que NÃO podem ter dependência entre si.
+    // Formato 2.9.0: ":from -X> :to" (o -X> indica dependência PROIBIDA)
+    restricted = arrayOf(
+        ":home -X> :detail",
+        ":detail -X> :home"
+    )
+}
+  ```

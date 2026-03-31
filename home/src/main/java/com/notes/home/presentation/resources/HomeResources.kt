@@ -1,6 +1,6 @@
 package com.notes.home.presentation.resources
 
-interface HomeResources {
+internal interface HomeResources {
     val topicAddedSuccess: String
     val topicDeletedSuccess: String
     val errorAddTopic: String

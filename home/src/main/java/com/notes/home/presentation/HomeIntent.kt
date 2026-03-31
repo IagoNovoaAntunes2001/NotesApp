@@ -2,7 +2,7 @@ package com.notes.home.presentation
 
 import com.notes.core.model.Topic
 
-sealed interface HomeIntent {
+internal sealed interface HomeIntent {
     data object LoadTopics : HomeIntent
     data class AddTopic(val title: String, val description: String) : HomeIntent
     data class DeleteTopic(val topic: Topic) : HomeIntent

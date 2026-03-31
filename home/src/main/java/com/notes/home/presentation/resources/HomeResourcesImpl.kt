@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 // @Inject constructor: o Hilt sabe como criar esta classe automaticamente.
 // @ApplicationContext: qualificador do Hilt que fornece o Context da Application.
-class HomeResourcesImpl @Inject constructor(
+internal class HomeResourcesImpl @Inject constructor(
     @ApplicationContext private val context: Context
 ) : HomeResources {
     override val topicAddedSuccess: String

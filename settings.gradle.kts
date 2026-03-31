@@ -1,5 +1,8 @@
 pluginManagement {
     repositories {
+        // Repositório local com os JARs do modules-graph-assert baixados via PowerShell
+        // (o JVM não confia no certificado de plugins.gradle.org, mas o Windows sim)
+        maven { url = uri(file("gradle/local-plugins")) }
         google {
             content {
                 includeGroupByRegex("com\\.android.*")

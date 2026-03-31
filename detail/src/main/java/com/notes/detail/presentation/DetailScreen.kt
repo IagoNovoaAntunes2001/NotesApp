@@ -29,7 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(
+internal fun DetailScreen(
     topicId: Int,
     onNavigateBack: () -> Unit,
     viewModel: DetailViewModel = hiltViewModel()

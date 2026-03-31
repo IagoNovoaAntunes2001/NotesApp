@@ -21,7 +21,7 @@ import javax.inject.Inject
 // @HiltViewModel diz ao Hilt que ele deve criar este ViewModel usando
 // o HiltViewModelFactory, permitindo injeção via @Inject constructor.
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+internal class HomeViewModel @Inject constructor(
     private val getTopicsUseCase: GetTopicsUseCase,
     private val addTopicUseCase: AddTopicUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,

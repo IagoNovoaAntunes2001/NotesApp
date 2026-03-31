@@ -42,7 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+internal fun HomeScreen(
     onNavigateToDetail: (topicId: Int) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {

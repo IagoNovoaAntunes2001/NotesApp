@@ -15,7 +15,7 @@ import javax.inject.Singleton
 //   É mais eficiente que @Provides pois não gera código extra — só mapeia interfaces.
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class HomeModule {
+internal abstract class HomeModule {
 
     @Binds
     @Singleton
