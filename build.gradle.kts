@@ -5,6 +5,12 @@ plugins {
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.compose.compiler) apply false
+    // Convention plugins do build-logic
+    id("notes.android.library") apply false
+    id("notes.android.library.compose") apply false
+    id("notes.android.hilt") apply false
+    id("notes.android.application") apply false
+    id("notes.android.application.compose") apply false
     // Valida o grafo de módulos em cada build — protege a arquitetura de regressões
     alias(libs.plugins.modules.graph.assert)
 }

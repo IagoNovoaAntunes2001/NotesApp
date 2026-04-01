@@ -1,4 +1,8 @@
 pluginManagement {
+    // includeBuild("build-logic") torna os convention plugins disponíveis
+    // para todos os subprojects como se fossem plugins externos.
+    // O Gradle compila o build-logic ANTES de avaliar os demais módulos.
+    includeBuild("build-logic")
     repositories {
         // Repositório local com os JARs do modules-graph-assert baixados via PowerShell
         // (o JVM não confia no certificado de plugins.gradle.org, mas o Windows sim)

@@ -1,23 +1,11 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.ksp)
+    id("notes.android.library")
+    id("notes.android.library.compose")
+    id("notes.android.hilt")
 }
 
 android {
     namespace = "com.notes.detail"
-    compileSdk = 36
-
-    defaultConfig { minSdk = 24 }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures { compose = true }
-    kotlinOptions { jvmTarget = "11" }
 }
 
 dependencies {
@@ -25,7 +13,6 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.designSystem)
 
-    // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
@@ -33,14 +20,7 @@ dependencies {
     implementation(libs.compose.runtime)
     debugImplementation(libs.compose.ui.tooling)
 
-    // Navigation
     implementation(libs.androidx.navigation.compose)
-
-    // Lifecycle
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 }

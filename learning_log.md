@@ -140,8 +140,8 @@
 - Ajuda a manter a modularização e a independência entre os módulos, evitando acoplamento indesejado e garantindo que as dependências sejam controladas e explícitas
 - Pode ser configurado para falhar o build se as regras forem violadas, garantindo que a arquitetura seja mantida ao longo do desenvolvimento e evitando que dependências indesejadas sejam introduzidas acidental
 - Exemplo de configuração:
-  ```
-  moduleGraphAssert {
+
+moduleGraphAssert {
     // restricted: pares de módulos que NÃO podem ter dependência entre si.
     // Formato 2.9.0: ":from -X> :to" (o -X> indica dependência PROIBIDA)
     restricted = arrayOf(
@@ -149,4 +149,10 @@
         ":detail -X> :home"
     )
 }
-  ```
+
+## Mês 1 | Semana 4 | Segunda-feira
+
+- Convention plugins são usados para centralizar e padronizar a configuração do Gradle em um projeto multi-módulo, evitando repetição de código e garantindo consistência entre os módulos
+- Eles são criados como módulos Gradle separados (geralmente em `buildSrc`) e aplicados nos módulos do projeto para compartilhar configurações comuns, como dependências, plugins, versões, etc
+- Exemplo de uso: criar um convention plugin para configurar o Koin em todos os módulos que precisam de injeção de dependências, evitando a repetição da configuração do Koin em cada módulo e garantindo que todos usem a mesma versão e configuração
+- Isso promove a modularização e a manutenção do código, permitindo que as mudanças na configuração sejam feitas em um único lugar e propagadas para todos os módulos que usam o convention plugin, além de facilitar a adição de novas dependências ou plugins no futuro, mantendo a consistência e a organização do projeto.

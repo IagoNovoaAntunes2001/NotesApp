@@ -229,21 +229,21 @@
     - ✅ Hilt cross-module
     - ✅ Module graph validado
 
-- [ ] ✅ **Semana 3 concluída**
+- [X] ✅ **Semana 3 concluída**
 
 ---
 
 ### Semana 4: Gradle Avançado + Build Optimization
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Estude build-logic/ do Now in Android
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Estude build-logic/ do Now in Android
     - Link: https://github.com/android/nowinandroid/tree/main/build-logic
     - Foco: Convention Plugins
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie build-logic/ no StaffNotes
     - Crie AndroidLibraryConventionPlugin
     - Aplique nos :core:* modules
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Convention Plugin = eliminar duplicação nos build.gradle
     - 1 linha aplica toda a config padrão
 
