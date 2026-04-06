@@ -1,7 +1,7 @@
 plugins {
-    id("notes.android.application")
-    id("notes.android.application.compose")
-    id("notes.android.hilt")
+    alias(libs.plugins.notes.android.application)
+    alias(libs.plugins.notes.android.application.compose)
+    alias(libs.plugins.notes.android.hilt)
 }
 
 android {
@@ -34,7 +34,7 @@ dependencies {
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
-    implementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.tooling) // só necessário para Previews em debug
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)

@@ -156,3 +156,141 @@ moduleGraphAssert {
 - Eles são criados como módulos Gradle separados (geralmente em `buildSrc`) e aplicados nos módulos do projeto para compartilhar configurações comuns, como dependências, plugins, versões, etc
 - Exemplo de uso: criar um convention plugin para configurar o Koin em todos os módulos que precisam de injeção de dependências, evitando a repetição da configuração do Koin em cada módulo e garantindo que todos usem a mesma versão e configuração
 - Isso promove a modularização e a manutenção do código, permitindo que as mudanças na configuração sejam feitas em um único lugar e propagadas para todos os módulos que usam o convention plugin, além de facilitar a adição de novas dependências ou plugins no futuro, mantendo a consistência e a organização do projeto.
+
+## Mês 1 | Semana 4 | Terça-feira
+
+### Version Catalog (libs.versions.toml)
+
+- Version Catalog é a fonte única de verdade para versões e dependências em projetos Gradle multi-módulo
+- Definido em `gradle/libs.versions.toml`, organizado em três seções: `[versions]`, `[libraries]`, `[plugins]`
+- Gera accessors type-safe: `libs.compose.bom`, `libs.room.runtime`, `libs.plugins.hilt.android`, etc.
+- Vantagens: autocomplete na IDE, renaming centralizado, sem inconsistência de versões entre módulos
+- Convention plugins do included build (`build-logic`) são registrados **sem `version`** no catálogo — o Gradle os resolve pelo classpath do included build, não de um repositório remoto
+  - Exemplo: `notes-android-library = { id = "notes.android.library" }` → accessor `libs.plugins.notes.android.library`
+  - O alias com hífens (`notes-android-library`) gera o accessor com pontos (`notes.android.library`)
+
+## Mês 1 | Semana 4 | Quarta-feira
+
+Otimizações ativadas em `gradle.properties`:
+- O 1º build com `configuration-cache` é **mais lento** — ele precisa serializar o task graph para disco
+- O **ganho real** aparece a partir do 2º build: `Reusing configuration cache.` → fase de configuration é ignorada
+- `parallel=true` escala com o número de módulos: quanto mais módulos desacoplados, maior o ganho
+- `build-cache` é poderoso em CI: módulos não alterados são restaurados do cache sem recompilar
+- Aumentar `Xmx` (2048m → 4096m) reduz GC pressure em projetos maiores, mas não ajuda no 1º build frio
+
+**Observação importante — quando cada otimização ajuda:**
+- `--no-configuration-cache` + código inalterado → **parallel** ajuda mais
+- Mudança em 1 arquivo de 1 módulo → **build-cache** faz os outros módulos serem `FROM-CACHE`
+- Build repetido sem mudanças → **configuration-cache** faz o build terminar em ~5sco
+
+## Mês 1 | Semana 4 | Quinta-feira
+
+**Por que essas tasks são lentas?**
+- `mergeDebugResources` — mescla todos os recursos XML/drawables de todos os módulos num único diretório. Escala com o número de módulos e o volume de recursos.
+- `mergeDebugJavaResource` — consolida todos os `.jar` de recursos Java (META-INF, etc.) de todas as dependências transitivas. Quanto mais libs externas, mais lento.
+- `mergeExtDexDebug` — converte as classes das dependências externas (Compose, Hilt, Room…) para DEX. É o passo mais pesado num build frio — por isso o build-cache é tão valioso aqui.
+
+- KAPT rodaria um compilador extra antes de processar as anotações, enquanto KSP lê o código diretamente.
+- KSP é mais rápido porque é otimizado para o processamento de anotações em Kotlin, enquanto o KAPT é um wrapper que usa o compilador Java, introduzindo overhead adicional.
+
+## Mês 1 | Semana 4 | Sexta-feira
+
+### Architecture Learning Journey — Now in Android
+
+O documento do NiA descreve como o app oficial do Google foi arquitetado e por quê. Os pontos centrais:
+
+**1. Camadas bem definidas com dependências unidirecionais**
+- UI Layer → Domain Layer → Data Layer
+- Nunca na direção contrária — Data Layer não conhece a UI
+- Domain Layer é **opcional** — só existe quando há lógica que múltiplas features precisam compartilhar
+
+**2. Representação do estado da UI**
+- `UiState` é uma `data class` imutável — snapshot da UI em um dado instante
+- Exposta via `StateFlow` do ViewModel — reativa, lifecycle-aware via `collectAsStateWithLifecycle`
+- Nunca expor `MutableStateFlow` publicamente — a UI nunca escreve no estado diretamente
+
+**3. Unidirectional Data Flow (UDF)**
+- Eventos sobem: `UI → Intent/Event → ViewModel`
+- Estado desce: `ViewModel → StateFlow → UI`
+- Side-effects são tratados separadamente via `Channel` (exactly-once)
+
+**4. Multi-module por feature**
+- Cada feature é um módulo independente: compila isolado, testa isolado, escala isolado
+- `:app` é o único que conhece todas as features (para montar o NavHost e o DI)
+- `:core:*` são os módulos de infraestrutura compartilhada, nunca conhecem as features
+
+**5. Convention Plugins**
+- Cada módulo novo = 3 linhas no `build.gradle.kts` graças aos convention plugins
+- Elimina a "config tax": `compileSdk`, `minSdk`, `jvmTarget`, deps do Hilt — tudo centralizado
+
+**6. Build como parte da arquitetura**
+- Configuration cache + build cache + parallelism não são "otimizações extras" — são requisitos da arquitetura multi-module
+- O grafo de módulos desacoplado é o que torna o parallel build eficiente
+
+---
+
+### Revisão do StaffNotes — Estado atual
+
+Estrutura de módulos:
+```
+:app                ← @HiltAndroidApp + NavHost + orquestrador
+:home               ← feature lista (MVI: Intent, State, SideEffect, ViewModel, Screen)
+:detail             ← feature detalhe (MVI completo)
+:design-system      ← componentes compartilhados
+:core:model         ← Topic (data class pura, zero deps)
+:core:data          ← TopicRepository (interface) + 4 UseCases
+:core:database      ← Room (Entity, DAO, Database, Mapper, RepositoryImpl)
+build-logic/        ← 5 Convention Plugins
+gradle/libs.versions.toml ← Version Catalog (versão única source of truth)
+```
+
+O que funciona end-to-end:
+- UI (Compose) → Intent → ViewModel → UseCase → Repository → Room → Flow → UI
+- Navegação: Home → Detail → Back (multi-module, sem acoplamento entre features)
+- DI: Hilt instalado em todos os módulos, cada um com seu @Module
+- SavedStateHandle: searchQuery sobrevive ao process death
+- Side-effects via Channel: NavigateToDetail, ShowSnackbar
+- Módulo grafo validado: `:home -X> :detail` e `:detail -X> :home` proibidos em build time
+
+Decisões que funcionaram bem:
+- `Channel` para side-effects → zero navegação duplicada
+- `reduce { copy(...) }` → mudanças de estado são funções puras fáceis de debugar
+- Convention Plugins → adicionar novo módulo leva < 5 minutos de config
+- `modules-graph-assert` → arquitetura enforçada pelo próprio build, não pela boa vontade
+
+Dívidas técnicas identificadas para o Mês 2:
+- `getTopics()` é `suspend fun` que retorna `List` — deveria ser `Flow<List<Topic>>` para reatividade real
+- Sem tratamento de erro tipado ainda (plain `Exception`) — Mês 2 introduzirá `Result<T>`
+- Sem testes unitários nos UseCases e ViewModel — Mês 2 começa a cobrir isso
+
+ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
+
+---
+
+### RESUMO MÊS 1
+
+**O que foi construído:**
+- App Android moderno do zero com arquitetura multi-camada (UI → Domain → Data)
+- 2 features completas com MVI: Home (lista) e Detail
+- Room como source of truth com Entity, DAO, Database e Mapper
+- Hilt multi-module com Convention Plugins para DI sem cerimônia
+- Navegação multi-module: cada feature expõe seu navGraph, `:app` orquestra
+- SavedStateHandle para sobreviver ao process death
+- Side-effects via Channel (exactly-once semantics)
+- build-logic com 5 Convention Plugins eliminando duplicação Gradle
+- Version Catalog (libs.versions.toml) como fonte única de versões
+- Build otimizado: configuration-cache + parallel + build-cache (38s → 5s)
+- modules-graph-assert: grafo de módulos validado em build time
+- 1 ADR completa documentando todas as decisões arquiteturais
+
+**Conceitos dominados:**
+- UDF: eventos sobem, estado desce
+- MVI vs MVVM: a diferença real é o contrato tipado de Intents
+- StateFlow vs Channel: estado persistente vs evento único
+- Repository pattern com inversão de dependência no Gradle
+- Process death vs config change: quando cada um ocorre e como tratar
+- Multi-module: vertical slicing (por feature) > horizontal slicing (por layer)
+- Convention Plugins: como e por que criar, onde o included build se encaixa
+- Build optimizations: qual otimização ajuda em qual cenário
+- KSP vs KAPT: KSP lê AST diretamente (2x mais rápido), KAPT é wrapper Java
+

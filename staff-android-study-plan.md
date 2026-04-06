@@ -247,53 +247,53 @@
     - Convention Plugin = eliminar duplicação nos build.gradle
     - 1 linha aplica toda a config padrão
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Migrate to Version Catalogs"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Migrate to Version Catalogs"
     - Link: https://developer.android.com/build/migrate-to-catalogs
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Organize gradle/libs.versions.toml completo
     - Migre TODAS as dependências para o catalog
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Version Catalog = single source of truth para versões
     - Autocomplete: libs.androidx.room.runtime
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Optimize your build speed"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Optimize your build speed"
     - Link: https://developer.android.com/build/optimize-your-build
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Rode `./gradlew assembleDebug --scan`
     - Analise build scan
     - Ative: configuration-cache, parallel, caching
-  - [ ] ✍️ **Reflexão (10min):**
-    - Build time ANTES: ___s
-    - Build time DEPOIS: ___s
+  - [X] ✍️ **Reflexão (10min):**
+    - Build time ANTES: 38s (clean build, sem otimizações)
+    - Build time DEPOIS: 5s (2º build — configuration cache reused + build cache hit)
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Use the Build Analyzer"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Use the Build Analyzer"
     - Link: https://developer.android.com/build/build-analyzer
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Build Analyzer: top 3 tasks mais lentas
     - KSP ao invés de KAPT?
     - Remova dependências desnecessárias
-  - [ ] ✍️ **Reflexão (10min):**
-    - KSP é ~2x mais rápido que KAPT
-    - Tasks mais lentas: [liste]
+  - [X] ✍️ **Reflexão (10min):**
+    - KSP é ~2x mais rápido que KAPT — projeto já usa KSP (Room + Hilt), zero KAPT ✅
+    - Tasks mais lentas: mergeDebugResources (2.3s) · mergeDebugJavaResource (2.2s) · mergeExtDexDebug (1.1s)
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Architecture Learning Journey" (NiA)
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Architecture Learning Journey" (NiA)
     - Link: https://github.com/android/nowinandroid/blob/main/docs/ArchitectureLearningJourney.md
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Revise StaffNotes completo
     - Escreva ADR: "Arquitetura do StaffNotes"
-  - [ ] ✍️ **Reflexão (10min):** RESUMO MÊS 1
+  - [X] ✍️ **Reflexão (10min):** RESUMO MÊS 1
     - ✅ Projeto modularizado com MVI + UDF
     - ✅ Room, Hilt, Navigation multi-module
     - ✅ Convention Plugins + Version Catalog
     - ✅ Build otimizado com métricas
     - ✅ 1 ADR escrita
 
-- [ ] ✅ **Semana 4 concluída**
-- [ ] ✅ **Mês 1 concluído**
+- [X] ✅ **Semana 4 concluída**
+- [X] ✅ **Mês 1 concluído**
 
 ---
 

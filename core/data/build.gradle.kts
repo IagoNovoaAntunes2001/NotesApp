@@ -1,6 +1,6 @@
 plugins {
-    id("notes.android.library")
-    id("notes.android.hilt")
+    alias(libs.plugins.notes.android.library)
+    alias(libs.plugins.notes.android.hilt)
 }
 
 android {

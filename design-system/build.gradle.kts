@@ -1,6 +1,6 @@
 plugins {
-    id("notes.android.library")
-    id("notes.android.library.compose")
+    alias(libs.plugins.notes.android.library)
+    alias(libs.plugins.notes.android.library.compose)
 }
 
 android {
@@ -9,7 +9,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.material)
+    // material (Material2 / View-based) removido — app é 100% Compose.
+    // Material3 via compose.material3 já cobre tudo que precisamos.
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
