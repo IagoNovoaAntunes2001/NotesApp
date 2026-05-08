@@ -10,9 +10,15 @@ android {
 dependencies {
     implementation(projects.core.model)
     implementation(projects.core.data)
+    implementation(projects.core.network)
 
     // Room
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    // Testes unitários
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
 }

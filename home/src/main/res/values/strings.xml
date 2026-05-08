@@ -12,4 +12,10 @@
     <string name="topic_deleted_success">Tópico removido!</string>
     <string name="error_add_topic">Erro ao adicionar tópico</string>
     <string name="error_delete_topic">Erro ao remover tópico</string>
+    <string name="offline_with_cache">Você está offline. Exibindo dados salvos.</string>
+    <string name="offline_no_cache_title">Sem conexão</string>
+    <string name="offline_no_cache_message">Não foi possível carregar os dados.\nVerifique sua conexão e tente novamente.</string>
+    <string name="retry_button">Tentar novamente</string>
+    <string name="syncing">Sincronizando…</string>
+    <string name="offline_banner">Você está offline — dados podem estar desatualizados</string>
 </resources>

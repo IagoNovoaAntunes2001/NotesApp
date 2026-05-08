@@ -301,148 +301,148 @@
 
 ### Semana 1: Room Avançado
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Room — Migrating database versions"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Room — Migrating database versions"
     - Link: https://developer.android.com/training/data-storage/room/migrating-db-versions
     - Foco: auto migrations vs manual
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione campo `isPinned: Boolean` ao NoteEntity
     - Crie Migration manual (versão 1 → 2)
     - Crie teste de migration com MigrationTestHelper
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Auto migration: Room gera se mudança é simples
     - Manual: necessário se renomeia/deleta column
     - SEMPRE testar migrations
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Room — Define relationships"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Room — Define relationships"
     - Link: https://developer.android.com/training/data-storage/room/relationships
     - Foco: @Embedded, @Relation, 1:N, N:N
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie TagEntity (id, name, color)
     - Crie NoteTagCrossRef (N:N relationship)
     - Query: notas com suas tags
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - @Relation = Room faz 2 queries internamente
     - Cuidado com N+1 em listas grandes
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Room — Full Text Search"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Room — Full Text Search"
     - Link: https://developer.android.com/reference/androidx/room/Fts4
     - Complementar: https://www.sqlite.org/fts5.html
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie módulo :feature:search
     - Crie FTS table para notas
     - Implemente busca full-text por título e conteúdo
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - FTS = indexa palavras para busca rápida
     - Performance muito melhor que LIKE '%query%'
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Room — Database Views"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Room — Database Views"
     - Link: https://developer.android.com/training/data-storage/room/creating-views
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie DatabaseView: NoteWithTagCount
     - Crie TypeConverter para Date/Instant
     - Refatore lista para usar a View
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - DatabaseView = query como "tabela virtual"
     - TypeConverter: converte tipos que Room não conhece
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "7 Pro Tips for Room"
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "7 Pro Tips for Room"
     - Link: https://medium.com/androiddevelopers/7-pro-tips-for-room-fbadea4bfbd1
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Refatore DAOs, organize queries por feature
     - Adicione @Transaction onde necessário
     - Rode testes de Room
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Migrations com testes
     - ✅ Relationships N:N
     - ✅ FTS search funcional
     - ✅ Database Views e TypeConverters
 
-- [ ] ✅ **Semana 1 concluída**
+- [X] ✅ **Semana 1 concluída**
 
 ---
 
 ### Semana 2: Single Source of Truth
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Build an offline-first app"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Build an offline-first app"
     - Link: https://developer.android.com/topic/architecture/data-layer/offline-first
     - Foco: padrão Network → DB → UI
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie módulo :core:network
     - Crie fake API (mock JSON ou json-server)
     - Crie NoteRemoteDataSource com Ktor ou Retrofit
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Offline-first: DB é a verdade, API é sync
     - UI sempre lê do DB (Flow)
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia Data Layer docs (Repository)
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia Data Layer docs (Repository)
     - Link: https://developer.android.com/topic/architecture/data-layer
     - Foco: como Repository orquestra local + remote
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Refatore NoteRepositoryImpl:
       - `getNotesStream()` → retorna Flow do Room
       - `sync()` → chama API, salva no Room
     - UI coleta do Flow (auto-update quando Room muda)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Repository expõe Flows do DB (reativo)
     - Sync é separado do read
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia sobre "stale-while-revalidate"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia sobre "stale-while-revalidate"
     - Link: https://developer.android.com/topic/architecture/data-layer/offline-first#synchronization
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Implemente: mostra cache + atualiza em background
     - Loading state: `UiState(notes, isRefreshing, lastSync)`
     - Mostre "Última sync: 5min atrás"
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - stale-while-revalidate: dados rápidos, refresh em background
     - UX: nunca bloquear UI esperando API
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Handle errors in data layer"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Handle errors in data layer"
     - Link: https://developer.android.com/topic/architecture/data-layer#error-handling
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie sealed interface Result\<T\> { Success, Error, Loading }
     - Implemente 3 cenários:
       - Online+cache → atualiza
       - Offline+cache → mostra cache + aviso
       - Offline+sem cache → tela de erro
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Nunca mostrar tela em branco se tem cache
     - Cada cenário tem UX diferente
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações + revise fluxo completo
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações + revise fluxo completo
+  - [X] 💻 **Prática (30min):**
     - Escreva testes para NoteRepositoryImpl:
       - API funciona → dados atualizados
       - API falha → retorna cache
       - Sem cache sem internet → erro
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Network → DB → UI implementado
     - ✅ Stale-while-revalidate funcional
     - ✅ Error handling com 3 cenários
     - ✅ Testes de Repository
 
-- [ ] ✅ **Semana 2 concluída**
+- [X] ✅ **Semana 2 concluída**
 
 ---
 
 ### Semana 3: Conflict Resolution & Optimistic Updates
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "optimistic updates mobile pattern"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "optimistic updates mobile pattern"
     - Conceito: atualizar UI antes da confirmação do servidor
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Implemente: ao editar nota, UI atualiza imediatamente
     - Salva no Room → mostra na UI → envia pra API em background
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Optimistic update = UX instantânea
     - Risco: API pode rejeitar
 

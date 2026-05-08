@@ -5,4 +5,10 @@ internal interface HomeResources {
     val topicDeletedSuccess: String
     val errorAddTopic: String
     val errorDeleteTopic: String
+    val offlineWithCache: String
+    val offlineNoCacheTitle: String
+    val offlineNoCacheMessage: String
+    val retryButton: String
+    val syncing: String
+    val offlineBanner: String
 }

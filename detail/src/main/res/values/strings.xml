@@ -3,4 +3,10 @@
     <string name="detail_screen_title">Topic Detail</string>
     <string name="detail_back_description">Go back</string>
     <string name="detail_topic_not_found">Topic not found</string>
+    <string name="detail_edit_description">Edit topic</string>
+    <string name="detail_save_description">Save topic</string>
+    <string name="detail_cancel_description">Cancel editing</string>
+    <string name="detail_title_label">Título</string>
+    <string name="detail_description_label">Descrição</string>
+    <string name="detail_saving">Salvando…</string>
 </resources>

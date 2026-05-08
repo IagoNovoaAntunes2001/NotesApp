@@ -294,3 +294,219 @@ ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
 - Build optimizations: qual otimização ajuda em qual cenário
 - KSP vs KAPT: KSP lê AST diretamente (2x mais rápido), KAPT é wrapper Java
 
+---
+
+## Mês 2 | Semana 1 | Segunda-feira
+
+- Padrão **offline-first**: o banco de dados local (Room) é a única fonte de verdade — a UI nunca lê diretamente da API
+  - Fluxo: `Network → DB → UI`
+  - A API é usada apenas para **sincronizar** o banco, nunca para alimentar a UI diretamente
+  - Se a API falhar, o usuário ainda vê os dados do cache — nunca uma tela em branco se há cache
+
+- Criado módulo `:core:network` com:
+  - `TopicRemoteDataSource` (interface) — o Repository conhece apenas o contrato
+  - `TopicRemoteDataSourceImpl` (Retrofit) — implementação real
+  - `FakeTopicRemoteDataSource` — implementação fake para testes e desenvolvimento offline
+  - `TopicDto` / `PostDto` — objetos de transferência, separados da Entity do Room
+
+## Mês 2 | Semana 1 | Terça-feira
+
+- **Repository como orquestrador** entre local e remoto:
+  - `getTopicsStream()` → sempre lê do Room (Flow reativo)
+  - `sync()` → chama API, salva no Room com `insertAll` (upsert)
+  - A UI **nunca chama sync diretamente** — ela só coleta o Flow
+
+- Por que separar `getTopicsStream()` de `sync()`?
+  - São responsabilidades diferentes: **ler** vs **sincronizar**
+  - O WorkManager pode chamar `sync()` sem a UI estar aberta
+  - A UI pode estar aberta sem precisar disparar um sync (ex: dados frescos)
+
+- Refatorado `TopicRepositoryImpl` para o padrão SSOT (Single Source of Truth):
+  ```kotlin
+  override fun getTopicsStream(): Flow<List<Topic>> =
+      topicDao.getAllStream().map { entities -> entities.map { it.toDomain() } }
+
+  override suspend fun sync(): Result<Unit> = runCatching {
+      val remoteDtos = remoteDataSource.fetchTopics()
+      topicDao.insertAll(remoteDtos.map { it.toDomain().toEntity() })
+  }
+  ```
+
+## Mês 2 | Semana 1 | Quarta-feira (WorkManager)
+
+- **WorkManager** para sync periódico em background:
+  - `PeriodicWorkRequest` de 1 hora com `NetworkType.CONNECTED` como constraint
+  - Sobrevive a: app fechado, reboot do dispositivo, process death
+  - `PeriodicWork` **não acumula** execuções perdidas (Doze Mode): ao voltar, executa 1 vez e reagenda
+  - HiltWorker (`@HiltWorker` + `@AssistedInject`) para injeção de dependências no Worker
+
+- Integração com Hilt: `HiltWorkerFactory` configurado no `NotesApplication`
+  - `WorkerFactory` padrão é substituído pelo do Hilt via `Configuration.Provider`
+
+- API conectada: `https://jsonplaceholder.typicode.com/posts`
+  - DTOs mapeados para o modelo de `Topic` via `TopicDtoMapper`
+  - Campos mapeados: `id → id`, `title → title`, `body → description`
+
+## Mês 2 | Semana 1 | Quinta/Sexta-feira
+
+### Como o Flow emite automaticamente quando há dados novos no Room
+
+- O Room usa um **InvalidationTracker** interno — quando há INSERT/UPDATE/DELETE em uma tabela, todos os Flows que observam aquela tabela são notificados e re-emitem automaticamente
+- O `sync()` é apenas o **gatilho** que escreve no Room — o Flow reage sozinho
+- Fluxo completo:
+  ```
+  sync() → dao.insertAll() → Room detecta mudança → Flow emite → ViewModel → UI atualiza
+  ```
+- A UI nunca "puxa" dados — ela **reage** ao que o Room notifica (padrão push, não pull)
+
+---
+
+## Mês 2 | Semana 2 | Segunda e Terça-feira
+
+- **`sealed interface AppResult<T>`** criado em `:core:model`:
+  - `Loading` — operação em andamento
+  - `Success<T>(data: T)` — dados disponíveis
+  - `Error<T>(exception, cachedData?)` — falha, mas com possibilidade de carregar cache
+
+- Por que não usar o `Result<T>` do Kotlin stdlib?
+  - O `Result<T>` nativo não suporta o estado `Loading` nem `cachedData`
+  - Para UI, precisamos modelar os 3 estados — o `AppResult` é mais expressivo
+
+- **`GetTopicsStreamUseCase`** atualizado para retornar `Flow<AppResult<List<Topic>>>`:
+  - `.onStart { emit(AppResult.Loading) }` — emite Loading antes do primeiro dado
+  - `.map { AppResult.Success(it) }` — envolve os dados do Room em Success
+  - `.catch { emit(AppResult.Error(it)) }` — captura erros do Room (raro)
+
+## Mês 2 | Semana 2 | Quarta e Quinta-feira
+
+### Error Handling com 3 cenários (offline-first na prática)
+
+- **Cenário 1 — Online + cache:**
+  - `sync()` sucede → Room atualiza → Flow emite → UI exibe `LinearProgressIndicator` durante sync
+  - Após o sync, `isRefreshing = false` e a lista atualiza automaticamente
+
+- **Cenário 2 — Offline + cache:**
+  - `sync()` falha + `topics.isNotEmpty()` → `isOffline = true`
+  - UI exibe banner de aviso: "Você está offline — dados podem estar desatualizados"
+  - Usuário ainda vê os dados — **nunca tela em branco se há cache**
+
+- **Cenário 3 — Offline + sem cache:**
+  - `sync()` falha + `topics.isEmpty()` → `syncFailed = true`
+  - UI exibe tela de erro completa com ícone + mensagem + botão "Tentar novamente"
+  - Botão dispara `HomeIntent.Refresh` → tenta sync novamente
+
+- Lógica no ViewModel que decide o cenário:
+  ```kotlin
+  syncResult.fold(
+      onSuccess = { reduce { copy(isRefreshing = false) } },
+      onFailure = { exception ->
+          val hasCachedData = _uiState.value.topics.isNotEmpty()
+          reduce {
+              copy(
+                  isOffline = true,
+                  syncFailed = !hasCachedData,
+                  errorMessage = if (hasCachedData) null else exception.message
+              )
+          }
+      }
+  )
+  ```
+
+## Mês 2 | Semana 2 | Sexta-feira (Testes)
+
+### Testes unitários do TopicRepositoryImpl
+
+- **Estratégia: Fakes manuais** (sem Mockk/Mockito):
+  - `FakeTopicDao` — implementa `TopicDao` com `MutableStateFlow` em memória (simula o Room reativo)
+  - `FakeTopicRemoteDataSource` — implementa `TopicRemoteDataSource` com flag `shouldFail` controlável
+
+- Por que Fakes em vez de Mocks?
+  - Fakes são implementações reais simples — o comportamento fica explícito e legível
+  - Mocks (`every { ... } returns ...`) podem passar em testes errados por má configuração
+  - O `FakeTopicDao` com `MutableStateFlow` **realmente emite** quando dados mudam, testando o Flow real
+
+- **Turbine** para testar Flows:
+  - `.test { awaitItem() }` — aguarda a próxima emissão e cancela o Flow automaticamente
+  - Evita race conditions e código verboso do `collect {}`
+
+- Testes criados (6 cenários):
+  1. Cenário 1: API funciona → sync sucede → stream emite dados novos
+  2. Cenário 1: stream vazio antes do sync → preenchido após sync
+  3. Cenário 2: API falha + cache → sync falha mas stream emite cache
+  4. Cenário 2: falha no sync não apaga dados existentes no DAO
+  5. Cenário 3: API falha + DAO vazio → sync falha e stream vazio
+  6. Cenário 3: exceção correta é propagada no `Result.failure`
+  7. Bônus: sync faz upsert (não duplica tópicos)
+
+- `runTest` do `kotlinx-coroutines-test`:
+  - Coroutine scope especial para testes com **tempo virtual**
+  - Substitui `runBlocking` — mais rápido, controla delays sem esperar tempo real
+
+### RESUMO DA SEMANA 2 — Mês 2
+
+- ✅ Network → DB → UI implementado (padrão offline-first SSOT)
+- ✅ `AppResult<T>` modelando os 3 estados: Loading, Success, Error com cachedData
+- ✅ Error handling com 3 cenários distintos na UI (online, offline+cache, offline+vazio)
+- ✅ Testes unitários do Repository com Fakes manuais + Turbine
+- ✅ Princípio central consolidado: **nunca mostrar tela em branco se há cache**
+
+---
+
+## Mês 2 | Semana 3 | Segunda-feira
+
+### Optimistic Updates
+
+- **O que é?** Atualizar a UI *antes* de confirmar com o servidor — assumimos que vai funcionar.
+  - O nome vem de "otimismo": agimos como se a operação fosse ter sucesso.
+  - Apps como Gmail, Google Docs, Notion, Twitter (curtir/descurtir) todos fazem isso.
+
+- **Por que fazer?**
+  - Latência de rede: 200ms–2s de espera antes de mostrar a mudança é UX ruim.
+  - Com optimistic update, a resposta parece **instantânea** — sem spinner bloqueante.
+
+- **O risco:** a API pode rejeitar a operação (ex: conflito, sem permissão, dado inválido).
+  - Solução: **rollback** — restaurar o estado anterior se a API falhar (Terça-feira).
+
+### Implementação no projeto
+
+- **`TopicRepository`** — adicionado `updateTopic(topic: Topic): Result<Unit>`
+- **`TopicRepositoryImpl`** — implementa o padrão em 2 passos:
+  ```kotlin
+  override suspend fun updateTopic(topic: Topic): Result<Unit> = runCatching {
+      // Passo 1: Room primeiro (persiste localmente, Flow emite → UI atualiza)
+      topicDao.insert(topic.toEntity())
+      // Passo 2: API depois (pode falhar — rollback amanhã)
+      remoteDataSource.updateTopic(topic.id, topic.toDto())
+  }
+  ```
+- **`UpdateTopicUseCase`** — novo use case, delega ao repository no `Dispatchers.IO`
+- **`DetailViewModel`** — o coração do optimistic update:
+  ```kotlin
+  // Passo 1: UI atualiza AGORA (antes de Room ou API)
+  reduce {
+      copy(isEditing = false, isSaving = true, topic = updatedTopic)
+  }
+  // Passo 2: I/O em background — UI já está atualizada
+  viewModelScope.launch {
+      updateTopicUseCase(updatedTopic).fold(
+          onSuccess = { reduce { copy(isSaving = false) } },
+          onFailure = { reduce { copy(isSaving = false) }
+              emitSideEffect(ShowSnackbar("Salvo localmente. Sincronização pendente."))
+          }
+      )
+  }
+  ```
+- **`DetailScreen`** — 2 modos:
+  - **Visualização**: `Text` com título + descrição + botão Edit (✏️) na TopAppBar
+  - **Edição**: `OutlinedTextField` + botões Cancelar (✕) e Salvar (✓) na TopAppBar
+  - `LinearProgressIndicator` sutil enquanto `isSaving = true` (não bloqueia)
+
+### Diferença entre Pessimistic vs Optimistic
+
+| | Pessimistic | Optimistic |
+|---|---|---|
+| Quando UI atualiza | Após API confirmar | Imediatamente |
+| UX durante request | Spinner bloqueante | Nada (imperceptível) |
+| Se API falhar | Nada mudou | Precisa de rollback |
+| Usado quando | Operações críticas (pagamento) | CRUD comum |
+

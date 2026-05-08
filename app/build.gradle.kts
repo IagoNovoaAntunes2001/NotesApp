@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.detail)
     implementation(projects.core.data)
     implementation(projects.core.database)
+    implementation(projects.core.network)
     implementation(projects.designSystem)
 
     implementation(platform(libs.compose.bom))
@@ -38,10 +39,16 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.runtime)
+    implementation(libs.material)  // resolve Theme.MaterialComponents de deps transitivas
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // WorkManager + Hilt integration
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
 
     testImplementation(libs.junit)
