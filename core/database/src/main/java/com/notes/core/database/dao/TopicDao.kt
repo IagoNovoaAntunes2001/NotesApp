@@ -29,6 +29,18 @@ interface TopicDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(topics: List<TopicEntity>)
 
+    // Busca apenas registros que precisam ser enviados ao servidor
+    @Query("SELECT * FROM topics WHERE syncStatus = 'PENDING'")
+    suspend fun getPendingTopics(): List<TopicEntity>
+
     @Delete
     suspend fun delete(topic: TopicEntity)
+
+    /**
+     * Remove tópicos com syncStatus = ERROR cujo updatedAt é anterior ao threshold.
+     * Usado pelo CleanupWorker como fase final da cadeia de sync.
+     * Threshold = System.currentTimeMillis() - 7 dias (em ms)
+     */
+    @Query("DELETE FROM topics WHERE syncStatus = 'ERROR' AND updatedAt < :thresholdMs")
+    suspend fun deleteErrorTopicsOlderThan(thresholdMs: Long)
 }

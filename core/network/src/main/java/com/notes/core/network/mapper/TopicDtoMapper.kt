@@ -23,11 +23,13 @@ fun PostDto.toTopicDto(): TopicDto = TopicDto(
 fun TopicDto.toDomain(): Topic = Topic(
     id = id,
     title = title,
-    description = description
+    description = description,
+    updatedAt = updatedAt
 )
 
 fun Topic.toDto(): TopicDto = TopicDto(
     id = id,
     title = title,
-    description = description
+    description = description,
+    updatedAt = updatedAt
 )

@@ -3,6 +3,9 @@ package com.notes.home.presentation
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import com.notes.core.data.sync.SyncConstants
 import com.notes.core.data.usecase.AddTopicUseCase
 import com.notes.core.data.usecase.DeleteTopicUseCase
 import com.notes.core.data.usecase.GetTopicsStreamUseCase
@@ -39,7 +42,8 @@ internal class HomeViewModel @Inject constructor(
     private val addTopicUseCase: AddTopicUseCase,
     private val deleteTopicUseCase: DeleteTopicUseCase,
     private val savedStateHandle: SavedStateHandle,
-    private val resources: HomeResources
+    private val resources: HomeResources,
+    private val workManager: WorkManager  // ← singleton global, mesmo do Application
 ) : ViewModel() {
 
     companion object {
@@ -64,6 +68,8 @@ internal class HomeViewModel @Inject constructor(
         observeTopicsStream()
         // Dispara sync imediato ao abrir o app
         syncTopics()
+        // Observa progresso do SyncWorker (0..100%)
+        observeSyncWorkerProgress()
     }
 
     fun processIntent(intent: HomeIntent) {
@@ -76,6 +82,54 @@ internal class HomeViewModel @Inject constructor(
             is HomeIntent.NavigateToDetail -> {
                 emitSideEffect(HomeSideEffect.NavigateToDetail(intent.topic.id))
             }
+        }
+    }
+
+    /**
+     * Observa o WorkManager buscando o SyncWorker pelo nome único.
+     *
+     * WorkInfo.State possíveis:
+     *   RUNNING  → worker está executando agora → lemos KEY_PROGRESS (0..100)
+     *   ENQUEUED → agendado, esperando constraints (rede, bateria)
+     *   SUCCEEDED / FAILED / CANCELLED → terminado
+     *
+     * getWorkInfosForUniqueWorkFlow retorna um Flow que emite sempre que
+     * o estado ou o progresso do worker mudam — sem polling, sem callbacks manuais.
+     */
+    private fun observeSyncWorkerProgress() {
+        viewModelScope.launch {
+            workManager
+                .getWorkInfosForUniqueWorkFlow(SyncConstants.SYNC_CHAIN_NAME)
+                .collect { workInfoList: List<WorkInfo> ->
+                    val newSyncState = when {
+                        // Algum worker está rodando agora → Running com progresso
+                        workInfoList.any { it.state == WorkInfo.State.RUNNING } -> {
+                            val progress = workInfoList
+                                .firstOrNull { it.state == WorkInfo.State.RUNNING }
+                                ?.progress
+                                ?.getInt(SyncConstants.KEY_PROGRESS, 0) ?: 0
+                            SyncState.Running(progress)
+                        }
+                        // Aguardando constraints ou worker anterior da cadeia (BLOCKED)
+                        workInfoList.any {
+                            it.state == WorkInfo.State.ENQUEUED ||
+                            it.state == WorkInfo.State.BLOCKED
+                        } -> SyncState.Enqueued
+
+                        // Algum falhou → toda a cadeia falhou
+                        workInfoList.any { it.state == WorkInfo.State.FAILED } ->
+                            SyncState.Failed
+
+                        // Todos com sucesso → cadeia completa ✓
+                        workInfoList.isNotEmpty() &&
+                        workInfoList.all { it.state == WorkInfo.State.SUCCEEDED } ->
+                            SyncState.Succeeded
+
+                        // Lista vazia ou todos cancelados
+                        else -> SyncState.Idle
+                    }
+                    reduce { copy(syncState = newSyncState) }
+                }
         }
     }
 
@@ -126,31 +180,24 @@ internal class HomeViewModel @Inject constructor(
      */
     private fun syncTopics() {
         viewModelScope.launch {
-            // Mostra indicador de sync em background (não bloqueia a UI)
-            reduce { copy(isRefreshing = true, isOffline = false, syncFailed = false) }
+            reduce { copy(isOffline = false, syncFailed = false) }
 
             val syncResult = syncTopicsUseCase()
 
             syncResult.fold(
                 onSuccess = {
-                    // Cenário 1: online, dados frescos chegaram via Room Flow automaticamente
-                    reduce { copy(isRefreshing = false, isOffline = false, syncFailed = false) }
+                    reduce { copy(isOffline = false, syncFailed = false) }
                 },
                 onFailure = { exception ->
                     val hasCachedData = _uiState.value.topics.isNotEmpty()
                     reduce {
                         copy(
-                            isRefreshing = false,
                             isOffline = true,
                             syncFailed = !hasCachedData,
-                            // Cenário 2: tem cache → não mostra errorMessage (UI mostra banner)
-                            // Cenário 3: sem cache → mostra mensagem de erro
                             errorMessage = if (hasCachedData) null else exception.message
                         )
                     }
-
                     if (hasCachedData) {
-                        // Cenário 2: avisa mas não bloqueia
                         emitSideEffect(HomeSideEffect.ShowSnackbar(resources.offlineWithCache))
                     }
                 }

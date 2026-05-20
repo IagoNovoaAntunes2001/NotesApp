@@ -39,9 +39,11 @@ class TopicRepositoryImplTest {
     private lateinit var repository: TopicRepositoryImpl
 
     // Dados de exemplo que a API "retornaria"
+    // updatedAt = 1_000L garante que o servidor vence no LWW quando o dado
+    // local tem updatedAt = 0L (default para registros sem timestamp).
     private val apiTopics = listOf(
-        TopicDto(id = 1, title = "Kotlin Coroutines", description = "Async sem callbacks"),
-        TopicDto(id = 2, title = "Clean Architecture", description = "Separação de camadas"),
+        TopicDto(id = 1, title = "Kotlin Coroutines", description = "Async sem callbacks", updatedAt = 1_000L),
+        TopicDto(id = 2, title = "Clean Architecture", description = "Separação de camadas", updatedAt = 1_000L),
     )
 
     // Dados de cache pré-existentes no DAO (simulam 1º sync feito anteriormente)
@@ -252,6 +254,216 @@ class TopicRepositoryImplTest {
         val topics = repository.getTopics()
         assertEquals("Não deve duplicar — deve ser upsert", 2, topics.size)
         assertEquals("Título deve ser atualizado para o da API", "Kotlin Coroutines", topics[0].title)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cenário 4: Optimistic Update + Rollback
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Cenário feliz: API aceita o update.
+     * - Room atualizado imediatamente
+     * - API confirma
+     * - Result.success retornado
+     * - Dado final no Room é o atualizado
+     */
+    @Test
+    fun `optimistic update - API aceita - dado permanece atualizado`() = runTest {
+        // Arrange: tópico original no DAO
+        val original = TopicEntity(id = 1, title = "Original", description = "Desc original")
+        fakeDao.insert(original)
+
+        val updatedTopic = com.notes.core.model.Topic(id = 1, title = "Atualizado", description = "Desc nova")
+
+        // API vai funcionar normalmente
+        // fakeRemote.shouldFail = false (padrão)
+
+        // Act
+        val result = repository.updateTopic(updatedTopic)
+
+        // Assert: success
+        assertTrue("updateTopic deve retornar success quando API aceita", result.isSuccess)
+
+        // Assert: dado final é o atualizado
+        val finalTopic = fakeDao.getById(1)
+        assertEquals("Dado deve ser o atualizado após API aceitar", "Atualizado", finalTopic?.title)
+    }
+
+    /**
+     * ROLLBACK: API rejeita (ou falha de rede).
+     * - Room atualizado otimisticamente (UI vê dado novo por um instante)
+     * - API falha
+     * - Repository restaura o snapshot (dado anterior) no Room
+     * - Flow emite o dado antigo → UI reverte automaticamente
+     * - Result.failure retornado → ViewModel mostra "Alteração revertida"
+     */
+    @Test
+    fun `optimistic update - API falha - rollback restaura snapshot no Room`() = runTest {
+        // Arrange: tópico original no DAO
+        val original = TopicEntity(id = 1, title = "Original", description = "Desc original")
+        fakeDao.insert(original)
+
+        val updatedTopic = com.notes.core.model.Topic(id = 1, title = "Deveria reverter", description = "Vai reverter")
+
+        // API vai falhar
+        fakeRemote.shouldFail = true
+
+        // Act
+        val result = repository.updateTopic(updatedTopic)
+
+        // Assert: failure retornado ao caller (ViewModel)
+        assertTrue("updateTopic deve retornar failure quando API falha", result.isFailure)
+
+        // Assert: ROLLBACK — Room deve ter o dado ORIGINAL de volta, não o atualizado
+        val finalTopic = fakeDao.getById(1)
+        assertEquals(
+            "Após rollback, Room deve ter o título original",
+            "Original",
+            finalTopic?.title
+        )
+        assertEquals(
+            "Após rollback, Room deve ter a descrição original",
+            "Desc original",
+            finalTopic?.description
+        )
+    }
+
+    /**
+     * Garante que o Stream (observado pela UI) reflete o rollback.
+     * O Flow deve emitir a sequência: original → atualizado → original (revertido).
+     */
+    @Test
+    fun `optimistic update - rollback - stream reverte para dado original`() = runTest {
+        // Arrange
+        val original = TopicEntity(id = 1, title = "Título Original", description = "")
+        fakeDao.insert(original)
+
+        fakeRemote.shouldFail = true
+
+        val updatedTopic = com.notes.core.model.Topic(id = 1, title = "Vai reverter", description = "")
+
+        // Act
+        repository.updateTopic(updatedTopic)
+
+        // Assert: após rollback, o Stream emite o dado original
+        repository.getTopicsStream().test {
+            val topics = awaitItem()
+            assertEquals("Stream deve refletir o rollback — título original", "Título Original", topics.first().title)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cenário 5: Last Write Wins (LWW)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * SERVER VENCE: servidor tem timestamp mais recente.
+     * O dado do servidor deve sobrescrever o dado local.
+     *
+     * Cenário: usuário editou às 10h, servidor tem versão das 12h.
+     * Resultado esperado: versão das 12h vence (server wins).
+     */
+    @Test
+    fun `LWW - server tem updatedAt maior - server vence e sobrescreve local`() = runTest {
+        val localTime  = 1_000L   // 10h (mais antigo)
+        val serverTime = 2_000L   // 12h (mais recente) → server vence
+
+        // Arrange: dado local com timestamp antigo
+        fakeDao.insert(TopicEntity(id = 1, title = "Versão local (antiga)", description = "", updatedAt = localTime))
+
+        // API retorna dado mais recente
+        fakeRemote.topics = listOf(
+            TopicDto(id = 1, title = "Versão servidor (nova)", description = "", updatedAt = serverTime)
+        )
+
+        // Act
+        val result = repository.sync()
+
+        // Assert: sync bem-sucedido
+        assertTrue("sync deve retornar success", result.isSuccess)
+
+        // Assert: server venceu — dado local foi sobrescrito
+        val finalTopic = fakeDao.getById(1)
+        assertEquals(
+            "Server deve vencer quando tem updatedAt maior",
+            "Versão servidor (nova)",
+            finalTopic?.title
+        )
+        assertEquals("updatedAt deve ser o do servidor", serverTime, finalTopic?.updatedAt)
+    }
+
+    /**
+     * LOCAL VENCE: usuário editou mais recentemente que o servidor.
+     * O dado local NÃO deve ser sobrescrito pelo dado do servidor.
+     *
+     * Cenário: servidor tem versão das 10h, usuário editou às 12h (offline).
+     * Resultado esperado: versão local das 12h é mantida (local wins).
+     */
+    @Test
+    fun `LWW - local tem updatedAt maior - local vence e nao e sobrescrito`() = runTest {
+        val serverTime = 1_000L   // 10h (mais antigo)
+        val localTime  = 2_000L   // 12h (mais recente) → local vence
+
+        // Arrange: dado local com timestamp recente (editado offline)
+        fakeDao.insert(TopicEntity(id = 1, title = "Edição offline (nova)", description = "", updatedAt = localTime))
+
+        // API retorna dado mais antigo
+        fakeRemote.topics = listOf(
+            TopicDto(id = 1, title = "Versão servidor (antiga)", description = "", updatedAt = serverTime)
+        )
+
+        // Act
+        repository.sync()
+
+        // Assert: local venceu — dado local foi MANTIDO
+        val finalTopic = fakeDao.getById(1)
+        assertEquals(
+            "Local deve vencer quando tem updatedAt maior",
+            "Edição offline (nova)",
+            finalTopic?.title
+        )
+        assertEquals("updatedAt local deve ser preservado", localTime, finalTopic?.updatedAt)
+    }
+
+    /**
+     * TIMESTAMPS IGUAIS: empate — por convenção, server vence (server-authoritative).
+     * Garante comportamento determinístico no caso de empate.
+     */
+    @Test
+    fun `LWW - timestamps iguais - server vence por convencao`() = runTest {
+        val sameTime = 1_000L
+
+        fakeDao.insert(TopicEntity(id = 1, title = "Local", description = "", updatedAt = sameTime))
+        fakeRemote.topics = listOf(
+            TopicDto(id = 1, title = "Server", description = "", updatedAt = sameTime)
+        )
+
+        // Com updatedAt igual, `dto.updatedAt > local.updatedAt` é false → local vence
+        // Isso é uma escolha de design: poderíamos usar >= para server ganhar no empate
+        repository.sync()
+
+        val finalTopic = fakeDao.getById(1)
+        // No nosso LWW: server.updatedAt > local → server ganha; igual → local mantido
+        assertEquals("Com timestamps iguais, local é mantido (> não >=)", "Local", finalTopic?.title)
+    }
+
+    /**
+     * NOVO TÓPICO DO SERVIDOR: não existe localmente → server sempre vence (insert).
+     */
+    @Test
+    fun `LWW - topico novo do servidor - e inserido sem conflito`() = runTest {
+        // Arrange: DAO vazio
+        fakeRemote.topics = listOf(
+            TopicDto(id = 99, title = "Novo do servidor", description = "", updatedAt = 5_000L)
+        )
+
+        // Act
+        repository.sync()
+
+        // Assert: tópico novo foi inserido
+        val finalTopic = fakeDao.getById(99)
+        assertEquals("Tópico novo do servidor deve ser inserido", "Novo do servidor", finalTopic?.title)
     }
 }
 

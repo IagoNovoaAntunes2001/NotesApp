@@ -2,14 +2,20 @@ package com.notes
 
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.BackoffPolicy
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.notes.sync.SyncWorker
+import com.notes.sync.CleanupWorker
+import com.notes.sync.ForegroundSyncObserver
+import com.notes.sync.SyncDownWorker
+import com.notes.sync.SyncUpWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -30,30 +36,102 @@ class NotesApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        scheduleSyncWorker()
+        scheduleSyncChain()
+        schedulePeriodicSync()
+        registerForegroundObserver()
     }
 
-    private fun scheduleSyncWorker() {
+    /**
+     * Cadeia OneTime: SyncUpWorker → SyncDownWorker → CleanupWorker
+     * Roda ao iniciar o app. Se já existe uma cadeia pendente (KEEP), não recria.
+     */
+    private fun scheduleSyncChain() {
         val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED) // só roda com internet
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresBatteryNotLow(true)
             .build()
 
-        val syncRequest = PeriodicWorkRequestBuilder<SyncWorker>(
-            repeatInterval = 1,
-            repeatIntervalTimeUnit = TimeUnit.HOURS
+        val syncUp = OneTimeWorkRequestBuilder<SyncUpWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+            .build()
+
+        val syncDown = OneTimeWorkRequestBuilder<SyncDownWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+            .build()
+
+        val cleanup = OneTimeWorkRequestBuilder<CleanupWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this)
+            .beginUniqueWork(SYNC_CHAIN_NAME, ExistingWorkPolicy.KEEP, syncUp)
+            .then(syncDown)
+            .then(cleanup)
+            .enqueue()
+    }
+
+    /**
+     * Sync Periódico: roda a cada 15 minutos (mínimo permitido pelo Android).
+     *
+     * ## Por que 15 min é o mínimo?
+     * O Android impõe esse limite para economizar bateria.
+     * Mesmo que você peça 5min, o WorkManager vai usar 15min.
+     *
+     * ## PeriodicWork vs OneTimeWork:
+     *   OneTimeWork:  roda uma vez → pode encadear (chaining) ✅
+     *   PeriodicWork: roda repetidamente → NÃO suporta chaining ❌
+     *
+     * Por isso o PeriodicWork aqui usa o SyncUpWorker diretamente (worker simples),
+     * sem a cadeia completa. A cadeia completa é acionada pelo ForegroundObserver
+     * e na abertura do app (scheduleSyncChain).
+     *
+     * ## ExistingPeriodicWorkPolicy:
+     *   KEEP:   já existe? mantém o existente (não reinicia o timer)
+     *   UPDATE: já existe? atualiza constraints/interval sem perder a próxima execução
+     *   CANCEL_AND_REENQUEUE: cancela e recria do zero (reinicia o timer)
+     */
+    private fun schedulePeriodicSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val periodicRequest = PeriodicWorkRequestBuilder<SyncUpWorker>(
+            repeatInterval = 15,
+            repeatIntervalTimeUnit = TimeUnit.MINUTES
         )
             .setConstraints(constraints)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL, // 10s → 20s → 40s → 80s...
-                10,
-                TimeUnit.SECONDS
-            )
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            SyncWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP, // se já existe, não recria
-            syncRequest
+            PERIODIC_SYNC_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicRequest
         )
+    }
+
+    /**
+     * Registra o ForegroundSyncObserver no ProcessLifecycleOwner.
+     *
+     * ProcessLifecycleOwner observa o lifecycle do PROCESSO todo,
+     * não de uma Activity específica. Isso significa:
+     *   - onStart: app voltou ao foreground (de background total)
+     *   - onStop: app foi para background
+     *   - Não dispara ao navegar entre telas
+     *
+     * Perfeito para disparar sync urgente quando o usuário abre o app.
+     */
+    private fun registerForegroundObserver() {
+        val workManager = WorkManager.getInstance(this)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            ForegroundSyncObserver(workManager)
+        )
+    }
+
+    companion object {
+        const val SYNC_CHAIN_NAME = "sync_chain" // nome único da cadeia
+        const val PERIODIC_SYNC_NAME = "periodic_sync"
     }
 }

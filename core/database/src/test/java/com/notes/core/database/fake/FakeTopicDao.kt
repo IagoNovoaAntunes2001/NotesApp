@@ -45,6 +45,9 @@ class FakeTopicDao : TopicDao {
         }
     }
 
+    override suspend fun getPendingTopics(): List<TopicEntity> =
+        _topics.value.filter { it.syncStatus == "PENDING" }
+
     override suspend fun delete(topic: TopicEntity) {
         _topics.update { current -> current.filterNot { it.id == topic.id } }
     }

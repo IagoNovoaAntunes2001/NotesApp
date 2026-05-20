@@ -115,10 +115,17 @@ internal class DetailViewModel @Inject constructor(
                     emitSideEffect(DetailSideEffect.ShowSnackbar("Salvo com sucesso ✓"))
                 },
                 onFailure = {
-                    // Room já tem o dado novo (salvo no step 1 do Repository).
-                    // API falhou → dado está local mas não sincronizado.
-                    reduce { copy(isSaving = false) }
-                    emitSideEffect(DetailSideEffect.ShowSnackbar("Salvo localmente. Sincronização pendente."))
+                    // ROLLBACK: o Repository já reverteu o Room para o snapshot anterior.
+                    // Aqui revertemos o UIState para refletir isso — o Flow do Room
+                    // também vai emitir o dado antigo automaticamente, mas revertemos
+                    // o topic no state explicitamente para garantir consistência imediata.
+                    reduce {
+                        copy(
+                            isSaving = false,
+                            topic = currentTopic, // ← reverte para o dado original
+                        )
+                    }
+                    emitSideEffect(DetailSideEffect.ShowSnackbar("Erro ao salvar. Alteração revertida."))
                 }
             )
         }

@@ -1,10 +1,14 @@
 package com.notes.home.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -85,10 +92,8 @@ internal fun HomeScreen(
     ) { innerPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
 
-            // Cenário 1 — Online+cache: barra de progresso sutil no topo durante sync
-            if (uiState.isRefreshing) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            }
+            // Barra de status do sync — mostra estado atual do WorkManager
+            SyncStatusBar(syncState = uiState.syncState)
 
             // Cenário 2 — Offline+cache: banner de aviso (não bloqueia o conteúdo)
             if (uiState.isOffline && uiState.topics.isNotEmpty()) {
@@ -119,6 +124,7 @@ internal fun HomeScreen(
                             TopicCard(
                                 title = topic.title,
                                 description = topic.description,
+                                syncStatus = topic.syncStatus,
                                 onClick = { viewModel.processIntent(HomeIntent.NavigateToDetail(topic)) },
                                 onDelete = { viewModel.processIntent(HomeIntent.DeleteTopic(topic)) }
                             )
@@ -194,6 +200,132 @@ private fun OfflineNoCache(onRetry: () -> Unit) {
             Spacer(modifier = Modifier.height(Spacing.small))
             Button(onClick = onRetry) {
                 Text(stringResource(R.string.retry_button))
+            }
+        }
+    }
+}
+
+/**
+ * Barra de status do sync — mostra o estado atual do WorkManager no topo da tela.
+ *
+ * Estados e sua UX:
+ *   Idle      → invisível (nada a mostrar)
+ *   Enqueued  → ícone de ampulheta + "Aguardando sync..." (cinza)
+ *   Running   → LinearProgressIndicator determinado (0→100%) + "Sincronizando... X%"
+ *   Succeeded → ícone ✓ verde + "Sincronizado ✓" (some depois de 2s via AnimatedVisibility)
+ *   Failed    → ícone ✗ vermelho + "Erro ao sincronizar ✗"
+ *
+ * Por que AnimatedVisibility?
+ *   Succeeded some após aparecer — o usuário precisa de feedback mas não de ruído permanente.
+ *   AnimatedVisibility com fadeIn/fadeOut dá uma transição suave.
+ */
+@Composable
+private fun SyncStatusBar(syncState: SyncState) {
+    AnimatedVisibility(
+        visible = syncState != SyncState.Idle,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        when (syncState) {
+            SyncState.Idle -> Unit
+
+            SyncState.Enqueued -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HourglassTop,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Aguardando sync...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            is SyncState.Running -> {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Barra de progresso determinada (0% → 100%)
+                    LinearProgressIndicator(
+                        progress = { syncState.progress / 100f },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            // "Sincronizando... 33%" → usuário sabe em qual fase está
+                            text = "Sincronizando... ${syncState.progress}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+
+            SyncState.Succeeded -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Text(
+                        text = "Sincronizado ✓",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+            }
+
+            SyncState.Failed -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Text(
+                        text = "Erro ao sincronizar ✗",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
             }
         }
     }

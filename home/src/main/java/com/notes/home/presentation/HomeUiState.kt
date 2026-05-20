@@ -20,8 +20,9 @@ internal data class HomeUiState(
     val searchQuery: String = "",
     val errorMessage: String? = null,
 
-    // Sync em andamento (spinner no topo da lista)
-    val isRefreshing: Boolean = false,
+    // Estado atual do SyncWorker observado via WorkInfo
+    // Substitui os campos soltos isRefreshing + syncProgress
+    val syncState: SyncState = SyncState.Idle,
 
     // Sem conexão detectada via falha no sync
     val isOffline: Boolean = false,

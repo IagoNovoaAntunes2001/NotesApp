@@ -25,7 +25,9 @@ object DatabaseModule {
             context,
             NotesDatabase::class.java,
             "notes.db"
-        ).build()
+        )
+            .addMigrations(NotesDatabase.MIGRATION_1_2, NotesDatabase.MIGRATION_2_3)
+            .build()
 
     @Provides
     fun provideTopicDao(db: NotesDatabase): TopicDao = db.topicDao()

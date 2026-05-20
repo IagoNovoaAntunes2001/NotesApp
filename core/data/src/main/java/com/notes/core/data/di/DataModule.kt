@@ -7,6 +7,7 @@ import com.notes.core.data.usecase.GetTopicByIdUseCase
 import com.notes.core.data.usecase.GetTopicsStreamUseCase
 import com.notes.core.data.usecase.GetTopicsUseCase
 import com.notes.core.data.usecase.SyncTopicsUseCase
+import com.notes.core.data.usecase.SyncPendingTopicsUseCase
 import com.notes.core.data.usecase.UpdateTopicUseCase
 import dagger.Module
 import dagger.Provides
@@ -40,6 +41,10 @@ object DataModule {
     @Provides
     fun provideSyncTopicsUseCase(repo: TopicRepository): SyncTopicsUseCase =
         SyncTopicsUseCase(topicRepository = repo)
+
+    @Provides
+    fun provideSyncPendingTopicsUseCase(repo: TopicRepository): SyncPendingTopicsUseCase =
+        SyncPendingTopicsUseCase(topicRepository = repo)
 
     @Provides
     fun provideUpdateTopicUseCase(repo: TopicRepository): UpdateTopicUseCase =

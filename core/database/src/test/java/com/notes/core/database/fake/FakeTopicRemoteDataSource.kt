@@ -10,13 +10,11 @@ import java.io.IOException
  * - [shouldFail] = false → simula API online, retorna [topics]
  * - [shouldFail] = true  → simula API offline, lança IOException
  *
- * Isso permite testar os 3 cenários sem precisar de internet real:
- *   Cenário 1: shouldFail=false, topics=<lista>   → API funciona
- *   Cenário 2: shouldFail=true, dao=<com dados>   → API falha, cache disponível
- *   Cenário 3: shouldFail=true, dao=<vazio>       → API falha, sem cache
+ * [topics] é var para que cada teste possa configurar o payload da API,
+ * incluindo [TopicDto.updatedAt] para testar o algoritmo Last Write Wins.
  */
 class FakeTopicRemoteDataSource(
-    private val topics: List<TopicDto> = emptyList(),
+    var topics: List<TopicDto> = emptyList(),
     var shouldFail: Boolean = false
 ) : TopicRemoteDataSource {
 
@@ -25,8 +23,14 @@ class FakeTopicRemoteDataSource(
         return topics
     }
 
-    // Stubs: não usados nos testes de sync, mas necessários pela interface
-    override suspend fun createTopic(dto: TopicDto): TopicDto = dto
-    override suspend fun updateTopic(id: Int, dto: TopicDto): TopicDto = dto
+    // Stubs: necessários pela interface
+    override suspend fun createTopic(dto: TopicDto): TopicDto {
+        if (shouldFail) throw IOException("Sem conexão com a internet")
+        return dto
+    }
+    override suspend fun updateTopic(id: Int, dto: TopicDto): TopicDto {
+        if (shouldFail) throw IOException("Sem conexão com a internet")
+        return dto
+    }
     override suspend fun deleteTopic(id: Int) = Unit
 }

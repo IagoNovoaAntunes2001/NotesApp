@@ -14,5 +14,11 @@ data class TopicDto(
     @SerializedName("id")          val id: Int,
     @SerializedName("title")       val title: String,
     @SerializedName("description") val description: String,
-    @SerializedName("is_pinned")   val isPinned: Boolean = false
+    @SerializedName("is_pinned")   val isPinned: Boolean = false,
+    /**
+     * Timestamp do servidor em milissegundos.
+     * JSONPlaceholder não retorna este campo — default 0L para a fake API.
+     * Uma API real retornaria o timestamp da última edição no servidor.
+     */
+    @SerializedName("updated_at")  val updatedAt: Long = 0L
 )

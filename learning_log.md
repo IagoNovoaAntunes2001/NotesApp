@@ -510,3 +510,496 @@ ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
 | Se API falhar | Nada mudou | Precisa de rollback |
 | Usado quando | Operações críticas (pagamento) | CRUD comum |
 
+---
+
+## Mês 3 | Semana 2 | Terça-feira
+
+### Conflict Resolution + Rollback (Optimistic Update)
+
+**Referência:** https://developer.android.com/topic/architecture/data-layer/offline-first#conflict-resolution
+
+- **Conflito de dados** ocorre quando o dado local e o remoto divergem.
+  - Ex: usu��rio edita offline → API retorna um valor diferente → quem ganha?
+  - Estratégias comuns: **Last Write Wins**, **Server Wins**, **Client Wins**, **Merge**.
+
+- **No nosso app:** adotamos **Server Wins** — se a API rejeitar, fazemos rollback local.
+  - Garante consistência: o servidor é a fonte de verdade final.
+
+- **O que é Rollback?**
+  - Antes de persistir o dado novo, guardamos um **snapshot** do estado anterior.
+  - Se a API falhar, restauramos o snapshot no Room.
+  - O Flow do DAO emite automaticamente → UI reverte sem código adicional na UI.
+
+---
+
+## Mês 2 | Semana 3 | Quarta-feira
+
+### Last Write Wins (LWW) — Estratégia de Conflict Resolution
+
+**Referência:** "last write wins vs merge conflict resolution"
+
+#### O que é conflito de dados?
+Ocorre quando local e servidor têm versões diferentes do mesmo dado — quem vence?
+
+Ex: usuário edita offline às 10h → servidor foi atualizado às 12h → qual versão prevalece?
+
+#### Estratégias de resolução
+
+| Estratégia | Como funciona | Risco |
+|---|---|---|
+| **Last Write Wins (LWW)** | Quem tem timestamp mais recente vence | Pode descartar edição mais antiga |
+| **Server Wins** | Servidor sempre vence, ignora local | Perde edições offline |
+| **Client Wins** | Local sempre vence | Perde atualizações do servidor |
+| **Merge** | Tenta fundir as duas versões | Complexo, pode gerar conflitos de merge |
+| **CRDTs** | Estruturas de dados que se mergeiam sem conflito | Muito complexo, para apps colaborativos |
+
+- Para um app de notas pessoal: LWW é o sweet spot entre simplicidade e correção
+
+---
+
+## Mês 2 | Semana 3 | Quinta-feira
+
+### SyncStatus — Visual Feedback de Sincronização
+
+**Referência:** "Google Keep architecture sync"
+
+#### Por que visual feedback de sync é crucial?
+- O usuário precisa saber se o dado está **seguro na nuvem** ou só existe localmente.
+- Sem feedback, um PENDING parece igual a um SYNCED → falsa sensação de segurança.
+- Apps como Google Keep, Notion, Obsidian mostram indicadores de sync explicitamente.
+
+#### Reflexão
+- Visual feedback de sync não é cosmético — é parte da **data layer contract com o usuário**.
+- O usuário toma decisões com base no que vê: "este dado está seguro?" → SYNCED = sim.
+- Implementar cedo (antes de ter usuários) é infinitamente mais fácil do que retrofitar depois.
+
+---
+
+## Mês 2 | Semana 3 | Sexta-feira — RESUMO DA SEMANA
+
+### Reflexão geral
+
+A semana 3 foi sobre **o que acontece quando a realidade bate de frente com o otimismo**:
+- Segunda: agimos como se fosse funcionar (optimistic)
+- Terça: planejamos o que fazer quando falha (rollback)
+- Quarta: decidimos quem tem razão quando há discordância (LWW)
+- Quinta: mostramos isso tudo visualmente ao usuário (SyncStatus)
+- Sexta: provamos que funciona (testes)
+
+### Os 4 conceitos da semana
+
+**1. Optimistic Update**
+- UI atualiza *antes* de confirmar com o servidor
+- Fluxo: UI atualiza → Room salva (PENDING) → API em background
+- Risco: API pode rejeitar → precisa de rollback
+
+**2. Rollback**
+- Guardamos snapshot *antes* de alterar
+- Se API falha: `topicDao.insert(snapshot)` restaura o estado anterior
+- Por que `insert` e não `delete`? O dado existia antes — delete apagaria tudo
+- O Flow do Room reverte a UI automaticamente (sem código extra na UI)
+
+**3. Last Write Wins (LWW)**
+- `server.updatedAt > local.updatedAt` → server vence → SYNCED
+- `server.updatedAt < local.updatedAt` → local vence → mantém PENDING (edição offline protegida)
+- `server.updatedAt == local.updatedAt` → empate → local mantido → CONFLICT
+- `local == null` → tópico novo do servidor → SYNCED
+- Alternativas mais complexas: OT (Google Docs), CRDTs (Notion) — overkill para notas pessoais
+
+**4. SyncStatus**
+- `SYNCED` ✓ → confirmado pelo servidor
+- `PENDING` ⏳ → criado/editado localmente, aguardando envio
+- `CONFLICT` ⚡ → empate de timestamp detectado
+- `ERROR` ✗ → reservado para falhas persistentes
+- Armazenado como `String` no Room (enums não são suportados nativamente)
+- Atualiza na UI via Flow — ícone muda sozinho quando o status muda no banco
+
+### Testes escritos — 7 cenários
+
+| # | Cenário | O que garante |
+|---|---|---|
+| 1 | Optimistic update — API aceita | Dado permanece atualizado no Room |
+| 2 | **Optimistic update — API falha** | **Snapshot restaurado — dado original volta** |
+| 3 | Rollback — stream reverte | Flow emite dado antigo automaticamente |
+| 4 | LWW — server mais recente | Server sobrescreve local |
+| 5 | **LWW — local mais recente** | **Edição offline protegida** |
+| 6 | LWW — timestamps iguais | Local mantido (operador `>`, não `>=`) |
+| 7 | LWW — tópico novo do servidor | Inserido sem conflito |
+
+### ✅ Checklist da Semana 3
+- ✅ Optimistic updates + rollback implementados e testados
+- ✅ Last Write Wins com `updatedAt` + 4 cenários de teste
+- ✅ `SyncStatus` enum com visual feedback na lista
+- ✅ Migrations 1→2 (`updatedAt`) e 2→3 (`syncStatus`)
+- ✅ 7 testes de repository cobrindo todos os cenários de sync
+
+
+---
+
+## Mês 2 | Semana 4 | Segunda-feira
+
+### WorkManager — Teoria
+
+**Quando usar WorkManager?**
+- Tarefas que precisam ser **garantidas**, mesmo se o app fechar ou o dispositivo reiniciar
+- Não usar para tarefas imediatas ou que o usuário espera ver instantaneamente (use coroutines ou Services)
+- Exemplos: sync periódico, upload de foto, backup, limpeza de cache
+
+**Constraints — pré-condições para executar:**
+- `setRequiredNetworkType(CONNECTED)` → só roda com internet
+- `setRequiresBatteryNotLow(true)` → não roda se bateria está fraca
+- `setRequiresCharging(true)` → só roda no carregador (para tarefas pesadas)
+- `setRequiresDeviceIdle(true)` → só roda quando o aparelho está ocioso (API 23+)
+
+**Retry Policy — o que acontece ao falhar:**
+- `BackoffPolicy.EXPONENTIAL` → 10s → 20s → 40s → 80s → ... (dobra a cada tentativa)
+- `BackoffPolicy.LINEAR` → 10s → 20s → 30s → 40s → ... (incremento fixo)
+- O Worker retorna `Result.retry()` para acionar o backoff
+- `Result.success()` → concluído, não reagenda
+- `Result.failure()` → falhou definitivamente, não tenta mais
+
+**WorkManager sobrevive a:**
+- App fechado pelo usuário ✅
+- Processo morto pelo sistema (low memory) ✅
+- Reinicialização do dispositivo ✅ (reagenda automaticamente)
+- Doze Mode ✅ (aguarda a próxima janela de manutenção)
+
+### Prática implementada
+
+**`SyncWorker` — duas fases de sync:**
+```
+doWork() {
+  Fase 1 — PUSH: syncPendingTopicsUseCase()
+    → busca topics com syncStatus = PENDING
+    → envia ao servidor via API
+    → marca como SYNCED no Room se confirmado
+    → falhou? → Result.retry() → backoff exponencial
+
+  Fase 2 — PULL: syncTopicsUseCase()
+    → busca todos os dados do servidor
+    → aplica LWW (Last Write Wins) no Room
+    → falhou? → Result.retry() → backoff exponencial
+
+  → Result.success() se tudo ok
+}
+```
+
+**`setProgress(workDataOf(KEY_PROGRESS to 0/50/100))`**
+- Permite que a UI observe o progresso do Worker em tempo real
+- 0% = início, 50% = push concluído, 100% = sync completo
+
+**Constraints configuradas:**
+```kotlin
+Constraints.Builder()
+  .setRequiredNetworkType(NetworkType.CONNECTED)
+  .setRequiresBatteryNotLow(true)
+  .build()
+```
+
+**Backoff exponencial configurado:**
+```kotlin
+setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
+// 10s → 20s → 40s → 80s → 160s → ...
+```
+
+**`ExistingPeriodicWorkPolicy.KEEP`** — se já existe um trabalho agendado com o mesmo nome, mantém o atual (não recria), evitando duplicação.
+
+### Reflexão
+
+- **WorkManager = tarefas garantidas** — o sistema se compromete a executar mesmo após reboot
+- **Exponential Backoff** protege o servidor de avalanches de requisições em caso de falha em massa
+- **Dois Constraints** garantem UX educada: não desperdiça dados do usuário (rede) nem bateria
+- **PUSH antes do PULL** é a ordem correta: garantir que edições locais chegam ao servidor antes de sobrescrever com dados do servidor
+- **`setProgress`** é útil para Workers longos — a UI pode mostrar uma barra de progresso observando `WorkInfo`
+
+---
+
+## Mês 2 | Semana 4 | Terça-feira
+
+### WorkManager Chaining
+
+**Conceito:** encadear Workers em sequência garantida — cada Worker só executa se o anterior retornou `Result.success()`.
+
+```
+SyncUpWorker ──success──► SyncDownWorker ──success──► CleanupWorker
+      │                          │
+   retry/fail               retry/fail
+      │                          │
+   ⛔ cadeia para            ⛔ cadeia para
+```
+
+**API:**
+```kotlin
+WorkManager.getInstance(this)
+    .beginUniqueWork("sync_chain", ExistingWorkPolicy.KEEP, syncUp)
+    .then(syncDown)
+    .then(cleanup)
+    .enqueue()
+```
+
+**Passagem de dados entre Workers:**
+- `outputData` no Worker que termina → `inputData` no Worker seguinte
+- Ex: `SyncUpWorker` passa `KEY_UP_DONE = true` → `SyncDownWorker` lê via `inputData.getBoolean(...)`
+
+**`UniqueWork` — garante que nunca existam 2 cadeias simultâneas:**
+
+| Policy | Comportamento |
+|---|---|
+| `KEEP` | Já existe? Mantém a atual, não duplica |
+| `REPLACE` | Cancela a existente e começa do zero |
+| `APPEND` | Aguarda a existente terminar, depois executa |
+
+**Implementado no projeto — 3 Workers especializados:**
+- `SyncUpWorker` — PUSH: envia tópicos `PENDING` ao servidor (fase 1)
+- `SyncDownWorker` — PULL: busca dados novos do servidor, aplica LWW (fase 2)
+- `CleanupWorker` — CLEANUP: remove tópicos `ERROR` há mais de 7 dias do Room (fase 3)
+
+**Importante:** `PeriodicWork` **não suporta chaining** — chaining só funciona com `OneTimeWork`.
+
+**Observação na UI:** `getWorkInfosForUniqueWorkFlow("sync_chain")` retorna um Flow que emite sempre que o estado ou progresso mudam — sem polling. Na cadeia, o Worker com `state == RUNNING` é o ativo e reporta seu progresso individual.
+
+---
+
+## Mês 2 | Semana 4 | Quarta-feira
+
+### Expedited Work + PeriodicWorkRequest + ForegroundLifecycleObserver
+
+#### 1. Expedited Work — `UrgentSyncWorker`
+
+Worker de **alta prioridade**: roda o mais rápido possível, ignorando o job scheduler normal.
+
+```kotlin
+OneTimeWorkRequestBuilder<UrgentSyncWorker>()
+    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+    .build()
+```
+
+**Regras obrigatórias:**
+- **Deve** implementar `getForegroundInfo()` — o sistema pode precisar rodar como `ForegroundService`, e para isso exige uma `Notification`
+- Tem limite de ~10 minutos de execução
+- **Não suporta chaining**
+
+**`OutOfQuotaPolicy`** — o que acontece se o app esgotou a cota de expedited:
+
+| Policy | Comportamento |
+|---|---|
+| `RUN_AS_NON_EXPEDITED_WORK_REQUEST` | Degrada para worker normal (não falha) ✅ |
+| `DROP_WORK_REQUEST` | Cancela silenciosamente |
+
+#### 2. PeriodicWorkRequest — a cada 15 minutos
+
+```kotlin
+PeriodicWorkRequestBuilder<SyncUpWorker>(15, TimeUnit.MINUTES).build()
+```
+
+- **15 min é o mínimo** imposto pelo Android para economizar bateria
+- Mesmo que você peça 5min, o WorkManager usa 15min
+
+#### 3. ForegroundSyncObserver — ProcessLifecycleOwner
+
+```kotlin
+ProcessLifecycleOwner.get().lifecycle.addObserver(ForegroundSyncObserver(workManager))
+```
+
+**`ProcessLifecycleOwner` vs `Activity Lifecycle`:**
+- `Activity Lifecycle` dispara ao navegar entre telas (onStop/onStart a cada troca de tela) — ruim para sync
+- `ProcessLifecycleOwner` representa **todo o app**: só dispara `onStart` quando o app volta do background — perfeito para sync ao reabrir
+
+```
+Usuário navega Home → Detail:
+  Activity.onStop/onStart ← dispara
+  ProcessLifecycle.onStop/onStart ← NÃO dispara ✅
+
+Usuário pressiona Home (sai do app) e volta:
+  ProcessLifecycle.onStop ← dispara
+  ProcessLifecycle.onStart ← dispara → UrgentSyncWorker enfileirado ✅
+```
+
+#### Visão geral — quando cada sync roda
+
+```
+App abre (onCreate)            → scheduleSyncChain()    → cadeia completa (Up→Down→Cleanup)
+App volta ao foreground        → ForegroundSyncObserver → UrgentSyncWorker (expedited, imediato)
+A cada 15 minutos              → PeriodicWorkRequest    → SyncUpWorker (push de pendentes)
+```
+
+---
+
+## Mês 2 | Semana 4 | Quinta-feira
+
+### WorkManager — Observing Work
+
+**Conceito:** observar o `WorkInfo` no ViewModel via Flow e traduzir os estados do WorkManager em feedback visual para o usuário.
+
+#### WorkInfo.State — todos os estados possíveis
+
+| Estado | Significado |
+|---|---|
+| `ENQUEUED` | Agendado, aguardando constraints (rede, bateria) |
+| `BLOCKED` | Na cadeia, aguardando o worker anterior terminar |
+| `RUNNING` | Executando agora — pode reportar progresso via `setProgress()` |
+| `SUCCEEDED` | Terminou com sucesso |
+| `FAILED` | Esgotou todas as tentativas de retry |
+| `CANCELLED` | Cancelado manualmente |
+
+#### API de observação
+
+```kotlin
+// Flow — emite sempre que estado ou progresso mudam (sem polling)
+workManager
+    .getWorkInfosForUniqueWorkFlow("sync_chain")
+    .collect { workInfoList: List<WorkInfo> ->
+        val running = workInfoList.firstOrNull { it.state == WorkInfo.State.RUNNING }
+        val progress = running?.progress?.getInt("sync_progress", 0) ?: 0
+    }
+```
+
+#### SyncState — sealed interface que mapeia WorkInfo.State → UX
+
+```kotlin
+sealed interface SyncState {
+    data object Idle      : SyncState   // nenhum worker ativo
+    data object Enqueued  : SyncState   // aguardando constraints
+    data class  Running(val progress: Int) : SyncState  // executando, 0..100%
+    data object Succeeded : SyncState   // cadeia completa ✓
+    data object Failed    : SyncState   // falhou após retries ✗
+}
+```
+
+**Por que criar SyncState em vez de usar WorkInfo.State direto na UI?**
+- `WorkInfo.State` é um detalhe do WorkManager — a UI não deveria conhecê-lo diretamente
+- `SyncState` é uma abstração de UX — desacopla a UI da biblioteca
+- Facilita testes (mockar `SyncState` é trivial)
+- Cadeia tem múltiplos workers: precisamos de lógica para combinar estados em um único estado de UX
+
+#### Mapeamento implementado no ViewModel
+
+```
+workInfoList.any { RUNNING }   → SyncState.Running(progress)
+workInfoList.any { ENQUEUED ou BLOCKED } → SyncState.Enqueued
+workInfoList.any { FAILED }    → SyncState.Failed
+workInfoList.all { SUCCEEDED } → SyncState.Succeeded
+else                           → SyncState.Idle
+```
+
+#### SyncStatusBar — feedback visual na HomeScreen
+
+| SyncState | UX |
+|---|---|
+| `Idle` | Invisível (sem ruído) |
+| `Enqueued` | ⏳ "Aguardando sync..." (cinza) |
+| `Running(33)` | Barra de progresso determinada + "Sincronizando... 33%" |
+| `Succeeded` | ✓ "Sincronizado ✓" (verde) |
+| `Failed` | ✗ "Erro ao sincronizar ✗" (vermelho) |
+
+`AnimatedVisibility` com `fadeIn/fadeOut` garante transições suaves entre estados.
+
+#### setProgress() — progresso granular na cadeia
+
+```
+SyncUpWorker:   0% → 33%   (PUSH)
+SyncDownWorker: 33% → 66%  (PULL)
+CleanupWorker:  66% → 100% (CLEANUP)
+```
+O ViewModel pega o progresso do worker `RUNNING` no momento — a barra avança de 0 a 100% ao longo de toda a cadeia.
+
+---
+
+## Mês 2 | Semana 4 | Sexta-feira — RESUMO MÊS 2
+
+### Revisão da arquitetura de sync completa
+
+Três estratégias complementares, cada uma resolvendo um cenário diferente:
+
+| Estratégia | Tipo | Worker(s) | Quando roda | O que faz |
+|---|---|---|---|---|
+| `sync_chain` | UniqueWork (OneTime) | Up→Down→Cleanup | App abre | PUSH + PULL + limpeza (cadeia completa) |
+| `urgent_sync` | UniqueWork (Expedited) | UrgentSyncWorker | App volta ao foreground | PUSH + PULL imediatos, alta prioridade |
+| `periodic_sync` | PeriodicWork | SyncUpWorker | A cada 15 min | Só PUSH (PeriodicWork não suporta chaining) |
+
+**Por que 3 e não 1?**
+- `PeriodicWork` não encadeia → não substitui a cadeia
+- `Expedited` não é periódico → não substitui o timer
+- Cada um cobre uma lacuna que os outros não cobrem
+
+---
+
+### RESUMO COMPLETO MÊS 2
+
+#### Semana 1 — Offline-First Foundation
+
+- **Padrão SSOT:** Room é a fonte de verdade, API é apenas sync
+- **Fluxo:** `API → Room → UI` — UI nunca lê da API diretamente
+- **`getTopicsStream()`** retorna `Flow` do Room — reativo, UI nunca "puxa"
+- **`sync()`** separado do read — pode ser chamado pelo WorkManager sem UI aberta
+- **`:core:network`** criado com Retrofit, DTOs separados das Entities do Room
+- **Módulo de rede** conectado à API real: `jsonplaceholder.typicode.com/posts`
+
+#### Semana 2 — Error Handling + Testes
+
+- **`AppResult<T>`** sealed interface: `Loading`, `Success(data)`, `Error(exception, cachedData?)`
+  - Por que não `Result<T>` do stdlib? Não tem `Loading` nem `cachedData`
+- **3 cenários offline modelados explicitamente no UiState:**
+  - Online + cache → `isRefreshing`, lista atualiza
+  - Offline + cache → `isOffline = true`, banner de aviso
+  - Offline + sem cache → `syncFailed = true`, tela de erro com retry
+- **Testes com Fakes manuais + Turbine:** 6 cenários cobrindo todo o Repository
+- **Princípio consolidado:** nunca tela em branco se há cache
+
+#### Semana 3 — Conflict Resolution + Optimistic Updates
+
+- **Optimistic Update:** UI atualiza *antes* da API confirmar → UX instantânea
+  - Room primeiro → API depois → rollback se falhar
+- **Rollback:** guarda snapshot *antes* de alterar → restaura se API rejeitar
+  - Por que `insert` no rollback e não `delete`? O dado existia antes
+  - Flow do Room reverte a UI automaticamente (sem código extra na UI)
+- **Last Write Wins (LWW):**
+  - `server.updatedAt > local.updatedAt` → server vence → SYNCED
+  - `server.updatedAt < local.updatedAt` → local vence → PENDING protegido
+  - Empate → CONFLICT; novo do server → SYNCED
+  - Alternativas rejeitadas: Server Wins (perde edições offline), CRDTs (overkill)
+- **`SyncStatus`** por registro: SYNCED ✓ / PENDING ⏳ / CONFLICT ⚡ / ERROR ✗
+- **Migrations Room:** `updatedAt` (v1→v2), `syncStatus` (v2→v3)
+
+#### Semana 4 — WorkManager
+
+- **WorkManager Chaining:** `beginUniqueWork().then().then().enqueue()`
+  - Cada Worker só roda se o anterior retornou `Result.success()`
+  - Passagem de dados: `outputData` → `inputData` entre Workers
+  - `ExistingWorkPolicy`: KEEP, REPLACE, APPEND, APPEND_OR_REPLACE
+- **Expedited Work:** alta prioridade, roda em segundos
+  - Obrigatório implementar `getForegroundInfo()` com Notification
+  - `OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST` → degrada sem falhar
+- **PeriodicWork:** mínimo 15 minutos, não suporta chaining
+- **`ProcessLifecycleOwner`:** observer do processo todo (não de Activity)
+  - `onStart` → app voltou do background → `UrgentSyncWorker` expedited
+  - Não dispara ao navegar entre telas (diferente de Activity.onStart)
+- **Observing Work:** `getWorkInfosForUniqueWorkFlow()` → Flow de WorkInfo
+  - `WorkInfo.State` → `SyncState` (sealed interface de UX)
+  - `SyncStatusBar` na HomeScreen: ⏳ Aguardando / 🔄 Sincronizando 33% / ✓ Sincronizado / ✗ Erro
+  - `setProgress()` para progresso granular por fase: 0→33→66→100%
+
+---
+
+### ADR escrita
+
+`docs/adr/002-estrategia-sincronizacao.md` — documenta:
+- Decisão pelo padrão offline-first com SSOT
+- As 3 estratégias de sync e por que cada uma existe
+- Escolha do LWW vs CRDTs/OT (e por que LWW é suficiente para notas pessoais)
+- Optimistic Updates com rollback vs Pessimistic
+- SyncStatus por registro e feedback visual ao usuário
+- Consequências, trade-offs e possíveis evoluções futuras
+
+---
+
+### ✅ Checklist Mês 2
+
+- ✅ Room avançado: migrations, FTS, relations, TypeConverters
+- ✅ Offline-first: SSOT, Network→DB→UI, stale-while-revalidate
+- ✅ Conflict resolution: LWW com `updatedAt`
+- ✅ Optimistic updates + rollback automático via Room Flow
+- ✅ WorkManager: chaining, expedited, periodic, `setProgress`
+- ✅ Observing Work: `WorkInfo.State` → `SyncState` → UI
+- ✅ `ForegroundSyncObserver` com `ProcessLifecycleOwner`
+- ✅ 1 ADR de sync completa com diagrama de fluxo

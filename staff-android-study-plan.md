@@ -446,117 +446,117 @@
     - Optimistic update = UX instantânea
     - Risco: API pode rejeitar
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia sobre conflict resolution
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia sobre conflict resolution
     - Link: https://developer.android.com/topic/architecture/data-layer/offline-first#conflict-resolution
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Implemente rollback se API retorna erro:
       - Salva estado anterior antes do update
       - Se falha: restaura no Room
       - Snackbar: "Erro ao salvar. Alteração revertida."
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Rollback = guardar snapshot antes da mudança
     - UX: Snackbar com "Tentar novamente"
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "last write wins vs merge conflict resolution"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "last write wins vs merge conflict resolution"
     - Conceitos: LWW, CRDTs, merge strategies
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione campo `updatedAt` em Note
     - Implemente Last Write Wins com timestamp
     - Se server.updatedAt > local → server vence
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - LWW é simples mas pode perder dados
     - Para notas: LWW é suficiente
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "Google Keep architecture sync"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "Google Keep architecture sync"
     - Compare abordagens de sync de apps conhecidos
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie SyncStatus enum: SYNCED, PENDING, CONFLICT, ERROR
     - Mostre ícone de status em cada nota na lista
     - Notas pendentes com ícone de "sync pendente"
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Visual feedback de sync é crucial
     - Usuário precisa saber se dado está salvo na nuvem
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações da semana
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações da semana
+  - [X] 💻 **Prática (30min):**
     - Escreva testes:
       - Optimistic update + rollback
       - LWW com timestamps diferentes
       - SyncStatus transitions
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Optimistic updates + rollback
     - ✅ Last Write Wins com timestamps
     - ✅ SyncStatus visual na UI
     - ✅ Testes de sync
 
-- [ ] ✅ **Semana 3 concluída**
+- [X] ✅ **Semana 3 concluída**
 
 ---
 
 ### Semana 4: WorkManager Avançado
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "WorkManager Overview"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "WorkManager Overview"
     - Link: https://developer.android.com/topic/libraries/architecture/workmanager
     - Foco: quando usar, constraints, retry policy
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie SyncWorker: sincroniza notas pendentes
     - Configure constraints: requiresNetwork, battery ok
     - Configure retry: BackoffPolicy.EXPONENTIAL
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - WorkManager = tarefas garantidas (sobrevive reboot)
     - Exponential backoff: 10s, 20s, 40s, 80s...
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "WorkManager — Chaining"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "WorkManager — Chaining"
     - Link: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/chain-work
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Crie cadeia: SyncUpWorker → SyncDownWorker → CleanupWorker
     - Configure UniqueWork (evita duplicação)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Chaining: WorkA → WorkB → WorkC
     - UniqueWork: evita 2 syncs simultâneos
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "WorkManager — Expedited Work"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "WorkManager — Expedited Work"
     - Link: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/define-work#expedited
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Implemente expedited work para sync urgente
     - Implemente PeriodicWorkRequest (a cada 15min)
     - Configure: foreground trigger com Lifecycle observer
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Expedited: alta prioridade, roda imediatamente
     - Periodic: mínimo 15min
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "WorkManager — Observing Work"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "WorkManager — Observing Work"
     - Link: https://developer.android.com/topic/libraries/architecture/workmanager/how-to/observe-work
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Observe WorkInfo no ViewModel
     - Mostre na UI: "Sincronizando...", "Sincronizado ✓", "Erro ✗"
     - Adicione progress reporting
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - WorkInfo.State: ENQUEUED, RUNNING, SUCCEEDED, FAILED
     - setProgress() para progresso granular
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações do mês
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações do mês
+  - [X] 💻 **Prática (30min):**
     - Revise arquitetura de sync completa
     - Escreva ADR: "Estratégia de Sincronização do StaffNotes"
-  - [ ] ✍️ **Reflexão (10min):** RESUMO MÊS 2
+  - [X] ✍️ **Reflexão (10min):** RESUMO MÊS 2
     - ✅ Room avançado: migrations, FTS, relations
     - ✅ Offline-first: SSOT, stale-while-revalidate
     - ✅ Conflict resolution + optimistic updates
     - ✅ WorkManager: chaining, expedited, periodic
     - ✅ 1 ADR de sync escrita
 
-- [ ] ✅ **Semana 4 concluída**
-- [ ] ✅ **Mês 2 concluído**
+- [X] ✅ **Semana 4 concluída**
+- [X] ✅ **Mês 2 concluído**
 
 ---
 
