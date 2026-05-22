@@ -1,6 +1,7 @@
 package com.notes.core.network.datasource
 
 import com.notes.core.network.dto.TopicDto
+import com.notes.core.network.pagination.PagedResult
 
 /**
  * Fake implementation do RemoteDataSource.
@@ -22,9 +23,15 @@ class FakeTopicRemoteDataSource : TopicRemoteDataSource {
     )
 
     override suspend fun fetchTopics(): List<TopicDto> {
-        // Simula latência de rede (50ms)
         kotlinx.coroutines.delay(50)
         return fakeDb.toList()
+    }
+
+    override suspend fun fetchTopicsPaged(cursor: Int, limit: Int): PagedResult<TopicDto> {
+        kotlinx.coroutines.delay(50)
+        val page = fakeDb.drop(cursor).take(limit)
+        val nextCursor = if (page.size == limit) cursor + limit else null
+        return PagedResult(data = page, nextCursor = nextCursor, total = fakeDb.size)
     }
 
     override suspend fun createTopic(dto: TopicDto): TopicDto {

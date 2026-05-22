@@ -532,7 +532,7 @@ ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
 
 ---
 
-## Mês 2 | Semana 3 | Quarta-feira
+## Mês 3 | Semana 2 | Quarta-feira
 
 ### Last Write Wins (LWW) — Estratégia de Conflict Resolution
 
@@ -557,7 +557,7 @@ Ex: usuário edita offline às 10h → servidor foi atualizado às 12h → qual 
 
 ---
 
-## Mês 2 | Semana 3 | Quinta-feira
+## Mês 3 | Semana 2 | Quinta-feira
 
 ### SyncStatus — Visual Feedback de Sincronização
 
@@ -575,7 +575,7 @@ Ex: usuário edita offline às 10h → servidor foi atualizado às 12h → qual 
 
 ---
 
-## Mês 2 | Semana 3 | Sexta-feira — RESUMO DA SEMANA
+## Mês 3 | Semana 2 | Sexta-feira — RESUMO DA SEMANA
 
 ### Reflexão geral
 
@@ -601,7 +601,7 @@ A semana 3 foi sobre **o que acontece quando a realidade bate de frente com o ot
 
 **3. Last Write Wins (LWW)**
 - `server.updatedAt > local.updatedAt` → server vence → SYNCED
-- `server.updatedAt < local.updatedAt` → local vence → mantém PENDING (edição offline protegida)
+- `server.updatedAt < local.updatedAt` → local vence → PENDING (edição offline protegida)
 - `server.updatedAt == local.updatedAt` → empate → local mantido → CONFLICT
 - `local == null` → tópico novo do servidor → SYNCED
 - Alternativas mais complexas: OT (Google Docs), CRDTs (Notion) — overkill para notas pessoais
@@ -636,7 +636,7 @@ A semana 3 foi sobre **o que acontece quando a realidade bate de frente com o ot
 
 ---
 
-## Mês 2 | Semana 4 | Segunda-feira
+## Mês 3 | Semana 4 | Segunda-feira
 
 ### WorkManager — Teoria
 
@@ -714,7 +714,7 @@ setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 10, TimeUnit.SECONDS)
 
 ---
 
-## Mês 2 | Semana 4 | Terça-feira
+## Mês 3 | Semana 4 | Terça-feira
 
 ### WorkManager Chaining
 
@@ -760,7 +760,7 @@ WorkManager.getInstance(this)
 
 ---
 
-## Mês 2 | Semana 4 | Quarta-feira
+## Mês 3 | Semana 4 | Quarta-feira
 
 ### Expedited Work + PeriodicWorkRequest + ForegroundLifecycleObserver
 
@@ -825,7 +825,7 @@ A cada 15 minutos              → PeriodicWorkRequest    → SyncUpWorker (push
 
 ---
 
-## Mês 2 | Semana 4 | Quinta-feira
+## Mês 3 | Semana 4 | Quinta-feira
 
 ### WorkManager — Observing Work
 
@@ -905,7 +905,7 @@ O ViewModel pega o progresso do worker `RUNNING` no momento — a barra avança 
 
 ---
 
-## Mês 2 | Semana 4 | Sexta-feira — RESUMO MÊS 2
+## Mês 3 | Semana 4 | Sexta-feira — RESUMO MÊS 2
 
 ### Revisão da arquitetura de sync completa
 
@@ -944,7 +944,7 @@ Três estratégias complementares, cada uma resolvendo um cenário diferente:
   - Offline + cache → `isOffline = true`, banner de aviso
   - Offline + sem cache → `syncFailed = true`, tela de erro com retry
 - **Testes com Fakes manuais + Turbine:** 6 cenários cobrindo todo o Repository
-- **Princípio consolidado:** nunca tela em branco se há cache
+- **Princípio central consolidado: **nunca mostrar tela em branco se há cache**
 
 #### Semana 3 — Conflict Resolution + Optimistic Updates
 
@@ -952,10 +952,10 @@ Três estratégias complementares, cada uma resolvendo um cenário diferente:
   - Room primeiro → API depois → rollback se falhar
 - **Rollback:** guarda snapshot *antes* de alterar → restaura se API rejeitar
   - Por que `insert` no rollback e não `delete`? O dado existia antes
-  - Flow do Room reverte a UI automaticamente (sem código extra na UI)
+  - O Flow do Room reverte a UI automaticamente (sem código extra na UI)
 - **Last Write Wins (LWW):**
   - `server.updatedAt > local.updatedAt` → server vence → SYNCED
-  - `server.updatedAt < local.updatedAt` → local vence → PENDING protegido
+  - `server.updatedAt < local.updatedAt` → local vence → PENDING (edição offline protegida)
   - Empate → CONFLICT; novo do server → SYNCED
   - Alternativas rejeitadas: Server Wins (perde edições offline), CRDTs (overkill)
 - **`SyncStatus`** por registro: SYNCED ✓ / PENDING ⏳ / CONFLICT ⚡ / ERROR ✗
@@ -1003,3 +1003,236 @@ Três estratégias complementares, cada uma resolvendo um cenário diferente:
 - ✅ Observing Work: `WorkInfo.State` → `SyncState` → UI
 - ✅ `ForegroundSyncObserver` com `ProcessLifecycleOwner`
 - ✅ 1 ADR de sync completa com diagrama de fluxo
+
+---
+
+## Mês 3 | Semana 1 | Segunda-feira
+
+### Mobile System Design Framework
+
+**Framework geral: Requirements → Constraints → HLD → Deep Dives**
+
+#### 1. Functional Requirements
+O que o app *faz*. Listar features principais e fora de escopo (non-goals).
+
+Para o StaffNotes:
+- Criar, editar, deletar nota
+- Buscar notas (full-text)
+- Sincronizar com servidor
+- Funcionar offline
+
+#### 2. Non-Functional Requirements (Constraints)
+Como o app *se comporta*. São os critérios de qualidade:
+- **Offline-first:** funciona sem internet, sync quando conectar
+- **Performance:** lista fluida com 100K notas (Paging + FTS)
+- **Confiabilidade:** nenhuma nota perdida (LWW + SyncStatus)
+- **Bateria/rede:** WorkManager com constraints, backoff exponencial
+
+> ⚠️ Em Mobile System Design, sempre **começar pelos constraints** — eles guiam todas as decisões de arquitetura.
+
+#### 3. High-Level Design (HLD)
+Diagrama de componentes e fluxo de dados:
+
+```
+UI (Compose)
+   └── ViewModel (MVI)
+         └── UseCase
+               └── Repository
+                     ├── LocalDataSource (Room)
+                     └── RemoteDataSource (Retrofit/Ktor)
+WorkManager (sync periódico + expedited)
+```
+
+#### 4. Deep Dives
+Entrar em detalhes de cada componente crítico:
+- Como funciona o sync? (LWW, PENDING→SYNCED, rollback)
+- Como paginar 100K notas? (Paging 3 + Room PagingSource)
+- Como garantir busca rápida? (FTS4/FTS5)
+- Como lidar com conflitos? (timestamp updatedAt)
+
+**Resumo:**
+- Framework: Requirements → Constraints → HLD → Deep Dive
+- Mobile: sempre começar por constraints (offline? bateria? volume de dados?)
+- HLD deve caber num quadro branco — simples e claro
+
+---
+
+## Mês 3 | Semana 1 | Terça-feira
+
+### Camada de Rede — Networking Layer
+
+**Componentes implementados no `:core:network`:**
+
+#### 1. Timeouts — por que são obrigatórios
+- **connectTimeout (10s):** tempo máximo para estabelecer a conexão TCP com o servidor. Se ultrapassar → `ConnectTimeoutException`
+- **readTimeout (30s):** tempo máximo para receber o corpo da resposta. Uploads grandes precisam de valor maior.
+- **writeTimeout (30s):** tempo máximo para enviar o corpo da requisição (ex: upload de imagem).
+- Sem timeouts: requisição pode ficar pendurada *para sempre* → ANR / UX travada.
+
+#### 2. AuthInterceptor — autenticação transparente
+- Adiciona o header `Authorization: Bearer <token>` em **todas** as requisições automaticamente.
+- O `tokenProvider` é um lambda `() -> String` — permite injetar qualquer fonte do token (DataStore, EncryptedSharedPrefs).
+- Se token estiver vazio (ex: usuário não logado): não adiciona o header, sem erro.
+- **Por que Interceptor e não parâmetro em cada @GET?** — DRY. Um lugar só cuida de auth.
+
+#### 3. RetryInterceptor — resiliência automática
+- Faz retry em:
+  - `IOException` (sem internet, DNS, conexão recusada) → pode ser transiente
+  - Resposta `5xx` (erro do servidor) → pode ser overload momentâneo
+- **NÃO** faz retry em `4xx`:
+  - `401` Unauthorized → token inválido, retry vai falhar de novo
+  - `404` Not Found → o recurso não existe, retry é inútil
+- Máximo de 3 tentativas (além da original = 4 tentativas no total).
+- Diferença vs WorkManager BackoffPolicy: este interceptor é para falhas *dentro de uma requisição*. O WorkManager é para falhas do Worker inteiro.
+
+#### 4. Cursor Pagination — por que e como
+
+```
+Offset:  GET /posts?page=2&per_page=10
+Cursor:  GET /posts?_start=10&_limit=10
+```
+
+**Problema do offset:** se um item for inserido na página 1 enquanto o usuário lê a página 2, os itens se deslocam → o usuário vê um item duplicado ou pula um.
+
+**Cursor:** usa a posição (`id` ou `timestamp`) do último item recebido como âncora — não se importa com inserções anteriores.
+
+```kotlin
+// Primeira página
+fetchTopicsPaged(cursor = 0, limit = 20)
+// → nextCursor = 20
+
+// Segunda página (usa o nextCursor da resposta anterior)
+fetchTopicsPaged(cursor = 20, limit = 20)
+// → nextCursor = 40
+```
+
+**`PagedResult<T>`:**
+```kotlin
+data class PagedResult<T>(
+    val data: List<T>,
+    val nextCursor: Int?,  // null = última página
+    val total: Int
+)
+val hasMore: Boolean get() = nextCursor != null
+```
+
+**Quando usar:**
+- Cursor → feeds, listas dinâmicas (redes sociais, restaurantes, notícias)
+- Offset → relatórios, tabelas com dados estáticos onde o usuário pode pular para "página 5"
+
+---
+
+## Mês 3 | Semana 1 | Quarta-feira
+
+### Camada de Persistência — Room vs DataStore vs SharedPreferences
+
+**Comparativo completo:**
+
+| Opção | Estrutura | API | Thread-safe | Quando usar |
+|---|---|---|---|---|
+| **Room** | SQL (tabelas + relações) | DAO + Flow | ✅ (IO thread) | Dados estruturados, queries complexas, listas |
+| **DataStore Preferences** | Chave-valor tipado | Flow + suspend | ✅ (assíncrono) | Configurações simples, flags, last sync |
+| **DataStore Proto** | Schema Protobuf | Flow + suspend | ✅ | Dados tipados com schema versionado |
+| **SharedPreferences** | Chave-valor XML | Síncrono | ❌ (ANR risk) | Legado — nunca em código novo |
+
+**Regra de ouro:**
+- Tem relações, queries, filtros? → **Room**
+- Precisa salvar "última sync" ou "tema escolhido"? → **DataStore Preferences**
+- Código legado que não posso reescrever agora? → **SharedPreferences** (apenas manter)
+
+#### DataStore na prática — `UserPreferencesDataSource`
+
+```kotlin
+// Leitura: Flow reativo — emite sempre que uma preferência muda
+val userPreferences: Flow<UserPreferences> = dataStore.data.map { prefs ->
+    UserPreferences(
+        lastSyncAt  = prefs[Keys.LAST_SYNC_AT] ?: 0L,
+        isDarkTheme = prefs[Keys.IS_DARK_THEME],
+        fontSize    = FontSize.entries[prefs[Keys.FONT_SIZE] ?: 1]
+    )
+}
+
+// Escrita: suspend — nunca bloqueia a Main thread
+suspend fun updateLastSyncAt(timestampMs: Long) {
+    dataStore.edit { prefs ->
+        prefs[Keys.LAST_SYNC_AT] = timestampMs  // ← transação atômica
+    }
+}
+```
+
+**Por que `edit { }` é atômico?**
+- SharedPreferences: `put` + `commit` são duas operações separadas → crash pode deixar estado inconsistente
+- DataStore: `edit { }` é uma transação — ou tudo salva ou nada muda
+
+**Onde fica o arquivo?**
+```
+data/data/<package>/files/datastore/user_preferences.preferences_pb
+```
+- Formato binário (`.pb`) — mais eficiente que XML do SharedPreferences
+
+**Schema design para performance no Room:**
+- Sempre indexar colunas usadas em `WHERE` e `ORDER BY`:
+  ```sql
+  CREATE INDEX idx_topics_sync_status ON topics(sync_status)
+  CREATE INDEX idx_topics_updated_at ON topics(updated_at)
+  ```
+- Nunca fazer `SELECT *` em tabelas grandes — selecione só as colunas que a UI precisa
+- Use `@DatabaseView` para queries complexas que são lidas com frequência (pré-computado pelo Room)
+
+---
+
+## Mês 3 | Semana 1 | Quinta-feira
+
+### System Design Interview — App de Delivery
+
+**Exercício completo documentado em:** `docs/system-design/delivery-app.md`
+
+#### Framework aplicado
+
+**1. Functional Requirements**
+- Ver restaurantes próximos (paginado por localização)
+- Ver cardápio
+- Montar carrinho + checkout
+- Rastrear pedido em tempo real
+- Histórico de pedidos
+
+**2. Non-Functional (Constraints) — os que guiaram as decisões:**
+- Offline parcial → cache de cardápios no Room
+- 100K restaurantes → cursor pagination + busca por raio geográfico
+- Status do pedido real-time → polling 30s (MVP) vs WebSocket (evolução)
+- Carrinho não pode ser perdido → Room como SSOT do carrinho
+
+**3. HLD — diagrama de componentes:**
+```
+UI → ViewModel → UseCase → Repository → Room + Retrofit
+                                         ↑
+                              WorkManager (OrderStatusWorker a cada 30s)
+```
+
+**4. Deep Dives:**
+- Cursor pagination para lista de restaurantes (dados dinâmicos que mudam)
+- Carrinho offline-first no Room
+- `priceAtOrder` — snapshot imutável do preço (nunca JOIN com preço atual)
+- Polling vs WebSocket: polling é suficiente para MVP
+
+**Decisão de destaque — Snapshot de preço:**
+```kotlin
+data class OrderItem(
+    val orderId: String,
+    val menuItemId: String,
+    val quantity: Int,
+    val priceAtOrder: Double  // ← snapshot — nunca mudar depois do pedido confirmado
+)
+```
+O preço pago é imutável. Se calcularmos o total com `MenuItem.price` atual, o histórico ficará errado quando o restaurante mudar o preço.
+
+**Onde travei:**
+- Múltiplos restaurantes no mesmo carrinho → validar no UseCase
+- Deep links para compartilhar restaurante → próxima semana
+- Push via FCM para status do pedido → FCM Data Message → Room → Flow → UI
+
+```
+**Reflexão:**
+- Cursor > offset para dados dinâmicos
+- Offline é um constraint, não um feature — planejar desde o início
+- Snapshot de dados financeiros é um padrão crítico (preço, taxa de câmbio, etc.)

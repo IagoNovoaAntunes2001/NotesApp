@@ -564,59 +564,59 @@
 
 ### Semana 1: Framework de Design
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Estude Mobile System Design framework
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Estude Mobile System Design framework
     - Link: https://github.com/nicklama/mobile-system-design
     - Complementar (livro): https://www.mobilesystemdesign.com
     - Foco: Constraints → HLD → Deep Dives
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Pratique no StaffNotes:
       - Functional requirements (criar, editar, buscar, sync)
       - Non-functional (offline, performance, 100K notas)
       - High-level design (diagrama de componentes)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Framework: Requirements → Constraints → HLD → Deep Dive
     - Mobile: sempre começar por constraints
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Continue o guide — Networking layer
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Continue o guide — Networking layer
+  - [X] 💻 **Prática (30min):**
     - Desenhe camada de rede do StaffNotes:
       - API design, pagination, auth
       - Retry, timeout, cache headers
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Cursor pagination > offset para mobile
     - Sempre planejar para offline
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Continue — Persistence layer
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Continue — Persistence layer
+  - [X] 💻 **Prática (30min):**
     - Desenhe camada de dados:
       - Room vs DataStore vs SharedPreferences
       - Schema design para performance
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Room: dados estruturados
     - DataStore: key-value, preferências
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia exemplos de System Design interviews
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia exemplos de System Design interviews
     - Link: https://github.com/nicklama/mobile-system-design
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Design de app de delivery (30min timer)
     - Requirements, constraints, HLD, deep dive
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Onde travei? O que preciso melhorar?
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações, revise framework
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações, revise framework
+  - [X] 💻 **Prática (30min):**
     - Refine design do delivery app
     - Documente trade-offs
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Framework de MSD aprendido
     - ✅ 2 designs praticados
 
-- [ ] ✅ **Semana 1 concluída**
+- [X] ✅ **Semana 1 concluída**
 
 ---
 

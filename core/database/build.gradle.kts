@@ -17,6 +17,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // DataStore — preferências do usuário (lastSyncAt, isDarkTheme)
+    implementation(libs.datastore.preferences)
+
     // Testes unitários
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
