@@ -622,174 +622,174 @@
 
 ### Semana 2: Design — App de Chat
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "chat app mobile system design"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "chat app mobile system design"
     - Link: https://github.com/nicklama/mobile-system-design
     - Foco: data model, ordering, IDs
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Desenhe: Message(id, senderId, content, timestamp, status)
     - Como garantir ordem? Como lidar com falha no envio?
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Status: pending → sent → delivered → read
     - ID local vs ID do servidor
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "WebSocket vs SSE vs polling mobile"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "WebSocket vs SSE vs polling mobile"
+  - [X] 💻 **Prática (30min):**
     - Desenhe conexão real-time + presença (typing)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - WebSocket: melhor para chat (bidirecional)
     - Custo: conexão aberta = bateria
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "FCM Architecture"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "FCM Architecture"
     - Link: https://firebase.google.com/docs/cloud-messaging/concept-options
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Desenhe: notification system end-to-end
     - Data message vs Notification message
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Data message: app processa (melhor para chat)
     - FCM não garante entrega
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "image upload mobile architecture"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "image upload mobile architecture"
+  - [X] 💻 **Prática (30min):**
     - Desenhe: upload de mídia
       - Compressão, chunks, thumbnails, cache
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Thumbnail primeiro, full-res sob demanda
     - Presigned URLs para upload
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações do chat design
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações do chat design
+  - [X] 💻 **Prática (30min):**
     - Escreva Design Doc completa do Chat App
     - Template: Problem → Goals → Non-goals → Design → Risks
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Chat app design completo
     - ✅ Design Doc escrita
 
-- [ ] ✅ **Semana 2 concluída**
+- [X] ✅ **Semana 2 concluída**
 
 ---
 
 ### Semana 3: Design — App de E-commerce
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "e-commerce mobile system design catalog"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "e-commerce mobile system design catalog"
+  - [X] 💻 **Prática (30min):**
     - Desenhe: catálogo com Paging, busca com debounce, filtros
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Cursor pagination > offset para dados dinâmicos
     - Debounce: 300ms antes de buscar
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "shopping cart mobile architecture"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "shopping cart mobile architecture"
+  - [X] 💻 **Prática (30min):**
     - Desenhe: carrinho local + sync, conflitos, price changes
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Cart híbrido: local para UX rápida
     - Sempre validar preços antes de checkout
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "mobile checkout payment architecture"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "mobile checkout payment architecture"
+  - [X] 💻 **Prática (30min):**
     - Desenhe: checkout com idempotency keys, deep links
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Checkout NUNCA processa no device
     - Idempotency evita double charge
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Deep Links on Android"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Deep Links on Android"
     - Link: https://developer.android.com/training/app-links/deep-linking
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Desenhe: deep links do e-commerce
     - `myapp://product/{id}`, `myapp://cart`, `myapp://order/{id}`
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Deep links: essenciais para marketing, push
     - Sempre ter fallback
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia anotações
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia anotações
+  - [X] 💻 **Pr��tica (30min):**
     - Escreva Design Doc do E-commerce
     - Compare com Design Doc do Chat
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ E-commerce design completo
     - ✅ 2 Design Docs escritas
 
-- [ ] ✅ **Semana 3 concluída**
+- [X] ✅ **Semana 3 concluída**
 
 ---
 
 ### Semana 4: Sua Primeira RFC
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Estude RFCs de empresas:
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Estude RFCs de empresas:
     - Uber: https://www.uber.com/en-US/blog/engineering/
     - Figma: https://www.figma.com/blog/section/engineering/
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Escolha tema da RFC (ex: "Estratégia MVI do StaffNotes")
     - Escreva: Context + Problem Statement
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - RFC = qualquer dev entende o problema sem contexto prévio
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Estude templates de ADR:
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Estude templates de ADR:
     - Link: https://adr.github.io
     - Link: https://github.com/joelparkerhenderson/architecture-decision-record
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Escreva: Options Considered (3 opções com trade-offs)
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Sempre listar pelo menos 2-3 opções
     - Incluir opção "não fazer nada"
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia exemplos de "Decision" e "Consequences"
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Releia exemplos de "Decision" e "Consequences"
+  - [X] 💻 **Prática (30min):**
     - Escreva: Decision + Consequences + Rollout Plan
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Consequences: positivas E negativas
     - Rollout: sempre gradual
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Pesquise "How to write a good RFC"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Pesquise "How to write a good RFC"
     - Link: https://buriti.ca/6-lessons-i-learned-while-implementing-technical-rfcs-as-a-management-tool-34687dbf46cb
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Revise RFC completa
     - Adicione diagramas (Mermaid ou draw.io)
     - Peça para alguém ler
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Diagrama vale mais que 1000 palavras
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Releia TODAS as anotações do Q1
-  - [ ] 💻 **Prática (30min):**
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Releia TODAS as anotações do Q1
+  - [X] 💻 **Prática (30min):**
     - Finalize RFC com feedback recebido
     - Rode StaffNotes completo
-  - [ ] ✍️ **Reflexão (10min):** RESUMO MÊS 3 + Q1
+  - [X] ✍️ **Reflexão (10min):** RESUMO MÊS 3 + Q1
     - ✅ 4 System Designs (StaffNotes, Delivery, Chat, E-commerce)
     - ✅ 2 Design Docs + 1 RFC completa
     - ✅ StaffNotes: modularizado, MVI, offline-first, sync
 
-- [ ] ✅ **Semana 4 concluída**
-- [ ] ✅ **Mês 3 concluído**
-- [ ] ✅ **Q1 CONCLUÍDO 🎉**
+- [X] ✅ **Semana 4 concluída**
+- [X] ✅ **Mês 3 concluído**
+- [X] ✅ **Q1 CONCLUÍDO 🎉**
 
 ---
 
 ### 📊 Checklist de Entregáveis Q1:
 
-- [ ] StaffNotes modularizado (:app, :core:*, :feature:*)
-- [ ] MVI + UDF implementado
-- [ ] Room com migrations, FTS, relationships
-- [ ] Offline-first com sync, SSOT, optimistic updates
-- [ ] WorkManager com chaining e monitoring
-- [ ] Convention Plugins + Version Catalog
-- [ ] Build otimizado com métricas
-- [ ] 4 Mobile System Designs praticados
-- [ ] 2 Design Docs escritas (Chat + E-commerce)
-- [ ] 1 RFC completa revisada por peer
-- [ ] 2+ ADRs escritas
-- [ ] LEARNING_LOG.md atualizado semanalmente
+- [X] StaffNotes modularizado (:app, :core:*, :feature:*)
+- [X] MVI + UDF implementado
+- [X] Room com migrations, FTS, relationships
+- [X] Offline-first com sync, SSOT, optimistic updates
+- [X] WorkManager com chaining e monitoring
+- [X] Convention Plugins + Version Catalog
+- [X] Build otimizado com métricas
+- [X] 4 Mobile System Designs praticados
+- [X] 2 Design Docs escritas (Chat + E-commerce)
+- [X] 1 RFC completa revisada por peer
+- [X] 2+ ADRs escritas
+- [X] LEARNING_LOG.md atualizado semanalmente
 ```

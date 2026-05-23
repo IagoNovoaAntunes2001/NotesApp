@@ -363,7 +363,7 @@ ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
 
 ## Mês 2 | Semana 2 | Segunda e Terça-feira
 
-- **`sealed interface AppResult<T>`** criado em `:core:model`:
+- **`sealed interface AppResult<T>` criado em `:core:model`:**
   - `Loading` — operação em andamento
   - `Success<T>(data: T)` — dados disponíveis
   - `Error<T>(exception, cachedData?)` — falha, mas com possibilidade de carregar cache
@@ -372,7 +372,7 @@ ADR escrita em: `docs/adr/001-arquitetura-staffnotes.md`
   - O `Result<T>` nativo não suporta o estado `Loading` nem `cachedData`
   - Para UI, precisamos modelar os 3 estados — o `AppResult` é mais expressivo
 
-- **`GetTopicsStreamUseCase`** atualizado para retornar `Flow<AppResult<List<Topic>>>`:
+- **`GetTopicsStreamUseCase` atualizado para retornar `Flow<AppResult<List<Topic>>>`:**
   - `.onStart { emit(AppResult.Loading) }` — emite Loading antes do primeiro dado
   - `.map { AppResult.Success(it) }` — envolve os dados do Room em Success
   - `.catch { emit(AppResult.Error(it)) }` — captura erros do Room (raro)
@@ -1236,3 +1236,147 @@ O preço pago é imutável. Se calcularmos o total com `MenuItem.price` atual, o
 - Cursor > offset para dados dinâmicos
 - Offline é um constraint, não um feature — planejar desde o início
 - Snapshot de dados financeiros é um padrão crítico (preço, taxa de câmbio, etc.)
+
+```
+
+---
+
+## Mês 3 | Semana 2 — App de Chat (Design Completo)
+
+### Segunda — Data Model + Ordenação
+
+**O problema do Chat:** parece simples, mas tem armadilhas clássicas de entrevista.
+
+#### Dois IDs por mensagem: localId + serverId
+
+```kotlin
+data class Message(
+    val localId: String,       // UUID gerado no device — imediato, sem esperar servidor
+    val serverId: String?,     // null até o servidor confirmar
+    val status: MessageStatus  // PENDING → SENT → DELIVERED → READ
+)
+```
+
+**Por que dois IDs?**
+- Usuário envia offline → `localId` existe, `serverId` ainda não
+- UI mostra a mensagem com ⏳ imediatamente (UX responsiva)
+- Quando o servidor confirma → Room atualiza `serverId`, mantém `localId`
+- Sem `localId`: ao receber o ACK do servidor, o app não sabe qual mensagem é aquela → **duplicata**
+
+#### Ordenação — o problema difícil
+
+```
+Device A envia às 10:00:001 (timestamp local)
+Device B envia às 10:00:002 (timestamp local)
+
+Mas o servidor recebe B antes de A (latência de rede diferente).
+serverTimestamp: B = 10:00:002, A = 10:00:003
+
+→ Ordem final (por serverTimestamp): B aparece antes de A
+→ Isso é correto — o servidor é a autoridade
+```
+
+**Estratégia Hybrid Ordering:**
+1. Localmente: ordena por `timestamp` do device → UX imediata
+2. Após sincronizar: reordena por `serverTimestamp` → autoridade final
+3. Se divergir: AnimatedList reordena suavemente
+
+---
+
+### Terça — WebSocket vs SSE vs Polling
+
+**Por que WebSocket para chat?**
+
+| | Polling | SSE | WebSocket |
+|---|---|---|---|
+| Direção | só cliente→servidor pergunta | só servidor→cliente empurra | **bidirecional** ✅ |
+| Protocolo | HTTP novo a cada vez | HTTP streaming | WS (upgrade HTTP) |
+| Bateria | boa | média | pior (conexão aberta) |
+| Chat | ❌ latência alta | ❌ não envia | ✅ |
+
+Chat precisa bidirecional: você envia mensagem E recebe mensagem E envia "estou digitando".
+
+**Typing Indicator com debounce:**
+```kotlin
+// Envia evento de "typing" só após 300ms de pausa
+// Se mandar a cada tecla → spam de eventos no servidor
+typingJob?.cancel()
+typingJob = viewModelScope.launch {
+    delay(300)
+    webSocket.sendTypingEvent()
+}
+// Servidor: TTL de 5s — se não receber novo "typing" em 5s → parou
+```
+
+**Reconexão com backoff exponencial:**
+```kotlin
+retryDelay = 1s → 2s → 4s → 8s → ... → cap em 30s
+```
+
+---
+
+### Quarta — FCM Architecture
+
+**Data Message vs Notification Message:**
+
+| | Notification Message | Data Message |
+|---|---|---|
+| App em foreground | SO ignora | App processa ✅ |
+| App em background | SO exibe na bandeja | App acorda e processa ✅ |
+| App morto | SO exibe na bandeja | App acorda e processa ✅ |
+| Controle da UX | ❌ (SO decide) | ✅ (app decide) |
+
+**Para chat: sempre Data Message** — o app controla como exibir a notificação (InboxStyle, badge, som personalizado).
+
+**Fluxo completo:**
+```
+App em background → FCM entrega Data Message
+→ FirebaseMessagingService.onMessageReceived()
+→ Room.insertMessage()  ← sem abrir Activity
+→ NotificationManager.notify() com estilo customizado
+→ Usuário toca → deep link abre a conversa
+```
+
+**FCM não garante entrega** — é "best effort". Por isso ao abrir o app, sempre sincroniza via REST as mensagens perdidas desde o último `serverTimestamp` salvo.
+
+---
+
+### Quinta — Upload de Mídia
+
+**Padrão Presigned URL** — imagem vai direto do device para o storage (S3/GCS), sem passar pelo servidor da API:
+
+```
+App → API: "Quero fazer upload de uma imagem de 2MB"
+API → App: URL temporária assinada do S3 (expira em 15min)
+App → S3: faz PUT direto com os bytes (sem passar pela API)
+App → API: "Upload feito, o mediaId é X, envia a mensagem"
+API → destinatário: mensagem com mediaId via WebSocket
+```
+
+**Por que não enviar pelo servidor?**
+- 1000 usuários enviando foto ao mesmo tempo → servidor vira gargalo
+- S3/GCS é feito para isso — escala infinita, CDN global
+
+**Otimizações mobile obrigatórias:**
+- **Compressão antes de enviar:** 5MB → 500KB (JPEG 80%) — poupa dados do usuário
+- **Thumbnail primeiro (10KB):** destinatário vê prévia imediatamente
+- **Full-res sob demanda:** só baixa quando toca → não gasta dados de quem nem vai olhar
+- **Cache local:** Room + FileSystem — imagem baixada uma vez, nunca baixa de novo
+
+---
+
+### Sexta — Design Doc do Chat App
+
+**Design Doc completa em:** `docs/system-design/chat-app.md`
+
+#### Resumo das decisões
+
+| Decisão chave | Por quê |
+|---|---|
+| WebSocket (não polling) | Chat precisa bidirecional < 1s |
+| localId + serverId | PENDING sem ID duplicaria ao receber ACK |
+| serverTimestamp para ordenação final | Clocks de devices podem divergir segundos |
+| FCM Data Message | App controla a UX da notificação |
+| Presigned URL para upload | Servidor não vira gargalo com arquivos |
+| Debounce 300ms no typing | Sem spam de eventos ao servidor |
+
