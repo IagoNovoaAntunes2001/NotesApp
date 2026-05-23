@@ -1,17 +1,5 @@
 # 📋 Plano de Estudos — Staff Android Engineer
 
-## 🗓️ Duração: 12 meses | Seg a Sex | 1h por dia
-## 📊 Distribuição: 70% Android + IA | 20% KMP | 10% React/Web
-
-## Progresso Geral:
-
-- [ ] Q1 — Fundações (Meses 1-3)
-- [ ] Q2 — Performance, Qualidade + IA (Meses 4-6)
-- [ ] Q3 — Expansão: KMP + React (Meses 7-9)
-- [ ] Q4 — Impacto & Consolidação (Meses 10-12)
-
----
-
 # 📅 Q1 — FUNDAÇÕES (Meses 1-3) | 100% Android
 
 ---
