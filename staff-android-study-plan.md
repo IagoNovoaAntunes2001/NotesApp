@@ -803,63 +803,63 @@
 
 ### Semana 1: Compose Performance
 
-- [ ] **🟢 Segunda-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Jetpack Compose Performance"
+- [X] **🟢 Segunda-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Jetpack Compose Performance"
     - Link: https://developer.android.com/develop/ui/compose/performance
     - Foco: recomposition, stability, skippable composables
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Ative "Show recomposition counts" no Layout Inspector
     - Identifique composables recompondo desnecessariamente no StaffNotes
     - Anote quais e por quê
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - Recomposition é normal — problema é recomposição excessiva
     - Composable skippável = todos params estáveis
 
-- [ ] **🟢 Terça-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Compose Stability"
+- [X] **🟢 Terça-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Compose Stability"
     - Link: https://developer.android.com/develop/ui/compose/performance/stability
     - Foco: @Stable, @Immutable, unstable classes
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione Compose Compiler Report ao build
     - Analise relatório: quais classes são instáveis?
     - Marque data classes do :core:model com @Immutable
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - List<T> é instável — use ImmutableList (kotlinx.collections)
     - @Immutable = promessa ao compilador
 
-- [ ] **🟢 Quarta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Lazy layout performance"
+- [X] **🟢 Quarta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Lazy layout performance"
     - Link: https://developer.android.com/develop/ui/compose/lists#lazy-performance
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Adicione `key {}` em todos os LazyColumn/LazyRow
     - Use `contentType` para itens heterogêneos
     - Meça: scroll FPS antes e depois com Perfetto
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - key = evita reordenar itens incorretamente
     - contentType = recicla views do mesmo tipo
 
-- [ ] **🟢 Quinta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Defer reads as long as possible"
+- [X] **🟢 Quinta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Defer reads as long as possible"
     - Link: https://developer.android.com/develop/ui/compose/performance/bestpractices#defer-reads
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Refatore animações: passar lambda em vez de State
     - Use `derivedStateOf` onde aplicável
-  - [ ] ✍️ **Reflexão (10min):**
+  - [X] ✍️ **Reflexão (10min):**
     - derivedStateOf: recalcula só quando dependência muda
     - Lambda defer: lê state na fase de draw, não composition
 
-- [ ] **🟢 Sexta-feira**
-  - [ ] 📖 **Teoria (20min):** Leia "Baseline Profiles"
+- [X] **🟢 Sexta-feira**
+  - [X] 📖 **Teoria (20min):** Leia "Baseline Profiles"
     - Link: https://developer.android.com/topic/performance/baselineprofiles
-  - [ ] 💻 **Prática (30min):**
+  - [X] 💻 **Prática (30min):**
     - Gere Baseline Profile para StaffNotes
     - Meça startup time: antes e depois
-  - [ ] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
+  - [X] ✍️ **Reflexão (10min):** RESUMO DA SEMANA
     - ✅ Recomposition analisada e reduzida
     - ✅ Stability configurada
     - ✅ Baseline Profile gerado
 
-- [ ] ✅ **Semana 1 concluída**
+- [X] ✅ **Semana 1 concluída**
 
 ---
 

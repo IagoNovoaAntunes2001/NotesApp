@@ -1380,3 +1380,167 @@ API → destinatário: mensagem com mediaId via WebSocket
 | Presigned URL para upload | Servidor não vira gargalo com arquivos |
 | Debounce 300ms no typing | Sem spam de eventos ao servidor |
 
+---
+
+---
+
+# 📅 Q2 — Mês 4: Performance & Compose Avançado
+
+## Semana 1: Compose Performance
+
+**Data:** 2026-05-26
+
+---
+
+### Segunda — Recomposition
+
+**O problema:** Recomposição é normal — o Compose precisa recompor para atualizar a UI. O problema é recomposição **excessiva**: composables recompondo quando nada relevante mudou.
+
+**Como detectar:**
+- Layout Inspector → "Show recomposition counts" → cores quentes (laranja/vermelho) = recompondo muito
+- Compose Compiler Report: gera relatório de quais composables são skippáveis ou não
+
+**Regra:** Um composable é **skippável** (pulado quando pai recompõe) se **todos os parâmetros forem estáveis**.
+
+```
+Recomposition excessiva → CPU desnecessária → jank → bateria
+```
+
+---
+
+### Terça — Stability: @Stable e @Immutable
+
+**Por que importa:** O compilador do Compose decide se pode pular um composable baseado na **estabilidade** dos seus parâmetros.
+
+| Anotação | Significado | Quando usar |
+|---|---|---|
+| `@Immutable` | Nenhuma propriedade muda após construção | data classes imutáveis |
+| `@Stable` | Mudanças notificam o Compose via `State` | classes observáveis |
+
+**Armadilha comum:**
+```kotlin
+// ❌ List<T> é INSTÁVEL — Compose não consegue garantir imutabilidade
+data class NoteListState(val notes: List<Note>)
+
+// ✅ ImmutableList é estável
+data class NoteListState(val notes: ImmutableList<Note>)
+```
+
+**Como confirmar:** Adicione ao `build.gradle.kts` do módulo:
+```kotlin
+kotlinOptions {
+    freeCompilerArgs += listOf(
+        "-P", "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=${project.buildDir}/compose_reports"
+    )
+}
+```
+Depois analise os `.txt` gerados — classes marcadas como `unstable` são candidatas a `@Immutable`.
+
+---
+
+### Quarta — Lazy Layout Performance
+
+**`key { }`:** Sem key, o Compose identifica itens pela **posição**. Se a lista reordena, ele acha que itens mudaram e recompõe tudo. Com key, ele sabe exatamente qual item é qual.
+
+```kotlin
+// ✅ Sempre usar key em listas dinâmicas
+LazyColumn {
+    items(notes, key = { it.id }) { note ->
+        NoteItem(note)
+    }
+}
+```
+
+**`contentType`:** Permite ao Compose reutilizar a composição de itens do **mesmo tipo** (como ViewHolder no RecyclerView).
+
+```kotlin
+items(
+    items = feedItems,
+    key = { it.id },
+    contentType = { it::class } // reutiliza composables do mesmo tipo
+) { item -> ... }
+```
+
+**Perfetto:** Ferramenta de profiling do Android para medir FPS de scroll. Frames acima de 16ms causam jank visível.
+
+---
+
+### Quinta — Defer Reads (Adiar leituras de State)
+
+**Conceito:** Quanto mais tarde você ler um `State`, menos fases do Compose são afetadas.
+
+```
+Composition → Layout → Draw
+     ↑              ↑       ↑
+  mais caro     médio   mais barato
+```
+
+**Lambda defer — exemplo prático:**
+```kotlin
+// ❌ Lê state na composition → recompõe a cada scroll
+@Composable
+fun StickyHeader(scrollOffset: Float) {
+    Box(Modifier.graphicsLayer { translationY = scrollOffset }) { ... }
+}
+
+// ✅ Lambda → lê só na fase de draw, composition não reexecuta
+@Composable
+fun StickyHeader(scrollOffset: () -> Float) {
+    Box(Modifier.graphicsLayer { translationY = scrollOffset() }) { ... }
+}
+```
+
+**`derivedStateOf`:** Evita recomposições desnecessárias quando um valor derivado não muda, mesmo que a dependência mude.
+
+```kotlin
+// ❌ Recompõe a cada pixel de scroll
+val showButton = scrollState.value > 0
+
+// ✅ Recompõe apenas quando cruza o threshold
+val showButton by remember {
+    derivedStateOf { scrollState.value > 0 }
+}
+```
+
+---
+
+### Sexta — Baseline Profiles
+
+**O que é:** Arquivo `.prof` incluído no APK que lista classes/métodos críticos para serem **compilados AOT** (Ahead-Of-Time) na instalação.
+
+**Sem vs Com:**
+```
+Sem: Instala → Abre → JIT compila em runtime → Lento nos primeiros segundos
+Com: Instala → AOT compila os críticos → Abre → Rápido desde o 1º frame
+```
+
+**Como gerar com Macrobenchmark:**
+```kotlin
+@BaselineProfileRule
+fun generate(rule: BaselineProfileRule) {
+    rule.collect(packageName = "com.staffnotes") {
+        pressHome()
+        startActivityAndWait()
+        // navegue pelos fluxos principais
+    }
+}
+```
+
+**Impacto:** Cold start 20–40% mais rápido. O Google Play distribui o profile para todos os usuários via Play Cloud automaticamente.
+
+**Quando regenerar:** Ao adicionar novas telas ou mudar arquitetura significativamente.
+
+---
+
+### Resumo da Semana 1
+
+| Técnica | O que resolve |
+|---|---|
+| Layout Inspector recomposition counts | Detecta composables problemáticos |
+| `@Immutable` / `ImmutableList` | Torna composables skippáveis |
+| `key {}` em LazyColumn | Evita recomposição em reordenação |
+| Lambda defer / `derivedStateOf` | Reduz fases desnecessárias do Compose |
+| Baseline Profile | Cold start 20–40% mais rápido |
+
+**Insight principal:** Performance no Compose é sobre **não fazer trabalho desnecessário**. Cada técnica aqui é uma forma de dizer ao Compose: "isso não mudou, pode pular".
+
